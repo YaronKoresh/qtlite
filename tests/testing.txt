@@ -1,0 +1,18 @@
+QtLite Unit Tests
+
+This directory contains unit tests for QtLite core components.
+Each test file (test_*.cpp) is compiled as a separate executable using QTEST_MAIN.
+
+To build and run tests:
+1. cd tests
+2. qmake "TEST=test_example" tests.pro
+3. make (or mingw32-make)
+4. Run individual test executables generated in the build directory
+
+See tests/README.md for more information.
+
+Note: Each test file should be built separately
+To build test_pathvalidator: qmake "TEST=test_pathvalidator" tests.pro
+To build test_settingspersistence: qmake "TEST=test_settingspersistence" tests.pro
+To build test_snippetmanager: qmake "TEST=test_snippetmanager" tests.pro
+To build test_codebundler: qmake "TEST=test_codebundler" tests.pro

@@ -1,0 +1,25 @@
+# Build directories
+/build/
+/release/
+/debug/
+
+# Qt/qmake generated files
+Makefile*
+*.pro.user
+*.pro.user.*
+*.stash
+*.o
+*.obj
+
+# Executables
+*.exe
+*.dll
+
+# IDE files
+.vs/
+*.vcxproj*
+*.sln
+*.suo
+
+# CodeQL temp files
+_codeql_detected_source_root

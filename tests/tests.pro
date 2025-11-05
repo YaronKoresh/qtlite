@@ -1,0 +1,42 @@
+QT += testlib
+CONFIG += qt console warn_on testcase
+CONFIG -= app_bundle
+
+TEMPLATE = app
+
+# Include paths for source files
+INCLUDEPATH += ../src
+
+# Common headers
+HEADERS += \
+    ../src/core/projectstructs.h \
+    ../src/core/pathvalidator.h
+
+isEmpty(TEST) {
+    TEST = test_pathvalidator
+}
+
+equals(TEST, test_pathvalidator) {
+    TARGET = test_pathvalidator
+    SOURCES += test_pathvalidator.cpp
+}
+
+equals(TEST, test_settingspersistence) {
+    TARGET = test_settingspersistence
+    SOURCES += test_settingspersistence.cpp
+    HEADERS += ../src/core/settingspersistence.h
+}
+
+equals(TEST, test_snippetmanager) {
+    TARGET = test_snippetmanager
+    SOURCES += test_snippetmanager.cpp
+    SOURCES += ../src/core/snippetmanager.cpp
+    HEADERS += ../src/core/snippetmanager.h
+}
+
+equals(TEST, test_codebundler) {
+    TARGET = test_codebundler
+    SOURCES += test_codebundler.cpp
+    SOURCES += ../src/core/codebundler.cpp
+    HEADERS += ../src/core/codebundler.h
+}
