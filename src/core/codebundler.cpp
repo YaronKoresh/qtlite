@@ -20,7 +20,7 @@ bool CodeBundler::bundleCode(const QString& rootFilePath, QString& outputPath) {
 
     QTextStream outStream(&outFile);
     QSet<QString> processedIncludes;
-    processedIncludes.insert(QDir::fromNativeSeparators(rootFileInfo.absoluteFilePath()));
+    processedIncludes.insert(QDir::cleanPath(rootFileInfo.absoluteFilePath()));
 
     parseAndBundleFile(rootFileInfo.absoluteFilePath(), outStream, processedIncludes, rootDir);
 
@@ -48,7 +48,7 @@ void CodeBundler::parseAndBundleFile(const QString& filePath, QTextStream& outSt
         if (localMatch.hasMatch()) {
             QString includeName = localMatch.captured(1);
             QString includePath = QDir(rootDir).absoluteFilePath(includeName);
-            includePath = QDir::fromNativeSeparators(includePath);
+            includePath = QDir::cleanPath(QDir::fromNativeSeparators(includePath));
 
             if (!processedIncludes.contains(includePath)) {
                 processedIncludes.insert(includePath);
@@ -60,7 +60,7 @@ void CodeBundler::parseAndBundleFile(const QString& filePath, QTextStream& outSt
                 outStream << "// (Skipped already included file: " << includeName << ")\n";
             }
         } else if (systemMatch.hasMatch()) {
-            QString systemHeader = systemMatch.captured(0);
+            QString systemHeader = systemMatch.captured(1).trimmed();
             if (!processedIncludes.contains(systemHeader)) {
                 processedIncludes.insert(systemHeader);
                 outStream << line << "\n";

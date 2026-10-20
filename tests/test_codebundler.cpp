@@ -13,6 +13,8 @@ private slots:
     void testBundleWithLocalIncludes();
     void testBundleWithSystemIncludes();
     void testBundleWithCircularIncludes();
+    void testBundleSameHeaderViaDotDotPathIsIncludedOnce();
+    void testBundleIndentedSystemIncludeIsNotRepeated();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -204,6 +206,52 @@ void TestCodeBundler::testBundleWithCircularIncludes()
     // Should contain markers for skipping already included files
     QVERIFY(content.contains("Skipped already included file") || 
             (content.contains("functionA") && content.contains("functionB")));
+}
+
+static void writeFile(const QString& path, const QString& text)
+{
+    QFileInfo(path).dir().mkpath(".");
+    QFile f(path);
+    QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
+    QTextStream(&f) << text;
+}
+
+static QString bundleToString(const QString& mainPath)
+{
+    CodeBundler bundler;
+    QString outputPath;
+    if (!bundler.bundleCode(mainPath, outputPath))
+        return QString();
+    QFile f(outputPath);
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+        return QString();
+    return QString::fromUtf8(f.readAll());
+}
+
+void TestCodeBundler::testBundleSameHeaderViaDotDotPathIsIncludedOnce()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/a.h", "int from_a = 1;\n");
+    writeFile(dir + "/main.cpp", "#include \"a.h\"\n#include \"sub/../a.h\"\nint main() { return 0; }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+    QCOMPARE(content.count("int from_a = 1;"), 1);
+}
+
+void TestCodeBundler::testBundleIndentedSystemIncludeIsNotRepeated()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/b.h", "  #include <vector>\n");
+    writeFile(dir + "/main.cpp", "#include <vector>\n#include \"b.h\"\nint main() { return 0; }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+    QCOMPARE(content.count("#include <vector>"), 1);
 }
 
 QTEST_MAIN(TestCodeBundler)
