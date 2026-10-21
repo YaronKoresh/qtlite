@@ -16,6 +16,7 @@ private slots:
     void testGetValidationColor();
     void testDirectoryIsNotAcceptedAsToolFile();
     void testExistingFilesAreAccepted();
+    void testProjectSettingsDefaultsDoNotDependOnMemoryContents();
 };
 
 void TestPathValidator::testValidateAndExtract()
@@ -121,6 +122,18 @@ void TestPathValidator::testExistingFilesAreAccepted()
     QVERIFY(validator.validateQtPaths(paths));
     QVERIFY(validator.validateVsPaths(paths));
     QVERIFY(validator.validatePythonPath(paths));
+}
+
+void TestPathValidator::testProjectSettingsDefaultsDoNotDependOnMemoryContents()
+{
+    alignas(ProjectSettings) unsigned char storage[sizeof(ProjectSettings)];
+    memset(storage, 0xFF, sizeof(storage));
+
+    ProjectSettings* settings = new (storage) ProjectSettings;
+    const bool bundle = settings->bundleToExe;
+    settings->~ProjectSettings();
+
+    QVERIFY(!bundle);
 }
 
 QTEST_MAIN(TestPathValidator)

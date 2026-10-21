@@ -27,7 +27,7 @@ struct ProjectSettings {
     QString buildDir;
     QString buildConfig;
     QString language;
-    bool bundleToExe;
+    bool bundleToExe = false;
 };
 
 #endif // PROJECTSTRUCTS_H
