@@ -76,6 +76,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Language-specific snippets
   - Snippet content validation
   - Python snippets contain Python syntax only
+  - The C++ template snippet does not reuse standard library names
 
 - **test_codebundler.cpp** - Tests for CodeBundler class
   - Include lines with spaces after the hash are bundled

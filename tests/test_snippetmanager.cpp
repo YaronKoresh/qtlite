@@ -11,6 +11,7 @@ private slots:
     void testGetAllLanguages();
     void testGetInvalidSnippet();
     void testPythonSnippetsArePython();
+    void testTemplateSnippetDoesNotReuseStandardLibraryNames();
 };
 
 void TestSnippetManager::testGetSnippetNames()
@@ -92,6 +93,16 @@ void TestSnippetManager::testPythonSnippetsArePython()
 
     const QString tryExcept = manager.getSnippet("Python Try/Except");
     QVERIFY(tryExcept.contains("try:\n    pass\nexcept"));
+}
+
+void TestSnippetManager::testTemplateSnippetDoesNotReuseStandardLibraryNames()
+{
+    SnippetManager manager;
+
+    const QString code = manager.getSnippet("C++ Template");
+    QVERIFY(code.contains("template<typename T>"));
+    QVERIFY2(!code.contains(" max("), qPrintable(code));
+    QVERIFY2(!code.contains(" min("), qPrintable(code));
 }
 
 QTEST_MAIN(TestSnippetManager)

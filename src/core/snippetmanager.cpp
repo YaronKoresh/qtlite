@@ -100,7 +100,7 @@ QString SnippetManager::getSnippetContent(const QString& name) {
     }
     else if (name == "C++ Template") {
         return "template<typename T>\n"
-               "T max(T a, T b) {\n"
+               "T larger(T a, T b) {\n"
                "    return (a > b) ? a : b;\n"
                "}\n";
     }

@@ -222,7 +222,7 @@ QtLite includes a collection of code snippets to speed up your development:
 - **If/Else**: If-else conditional structure
 - **C++ Class**: Basic C++ class template
 - **C++ Struct**: Structure definition
-- **C++ Template**: Template function example
+- **C++ Template**: Template function example (named `larger`)
 
 #### Python
 
