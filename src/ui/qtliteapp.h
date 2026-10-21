@@ -78,6 +78,7 @@ private slots:
     void bundleCode();
     void insertSnippet(QAction* action);
     void createNewEditorTab();
+    void saveCurrentFile();
     void updateSnippetMenu();
 };
 

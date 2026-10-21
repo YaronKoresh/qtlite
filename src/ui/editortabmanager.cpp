@@ -2,6 +2,10 @@
 
 EditorTabManager::EditorTabManager(QTabWidget* tabs) : editorTabs(tabs), currentLanguage("C++ (Qt)") {
     connect(editorTabs, &QTabWidget::tabCloseRequested, this, &EditorTabManager::closeTab);
+
+    QShortcut* saveShortcut = new QShortcut(QKeySequence::Save, editorTabs);
+    saveShortcut->setContext(Qt::WindowShortcut);
+    connect(saveShortcut, &QShortcut::activated, this, &EditorTabManager::saveRequested);
 }
 
 CodeEditor* EditorTabManager::getCurrentEditor() {

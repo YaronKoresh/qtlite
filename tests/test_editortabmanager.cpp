@@ -23,6 +23,7 @@ private slots:
     void testSaveTabWithPathWritesToThatPath();
     void testSaveCreatesMissingBuildDir();
     void testSaveWithUnwritableTargetReturnsEmpty();
+    void testCtrlSEmitsSaveRequestedOnce();
 };
 
 void TestEditorTabManager::testSaveUnsavedTabWritesDefaultCppFileToBuildDir()
@@ -114,6 +115,22 @@ void TestEditorTabManager::testSaveWithUnwritableTargetReturnsEmpty()
 
     QVERIFY(manager.saveCurrentEditor(dir.path()).isEmpty());
     QVERIFY(manager.saveCurrentEditor(QString()).isEmpty());
+}
+
+void TestEditorTabManager::testCtrlSEmitsSaveRequestedOnce()
+{
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    CodeEditor* editor = manager.addNewTab("main.cpp");
+    editor->setPlainText("x\n");
+    QSignalSpy spy(&manager, &EditorTabManager::saveRequested);
+
+    tabs.show();
+    QVERIFY(QTest::qWaitForWindowActive(&tabs));
+    editor->setFocus();
+    QTest::keyClick(editor, Qt::Key_S, Qt::ControlModifier);
+
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(TestEditorTabManager)

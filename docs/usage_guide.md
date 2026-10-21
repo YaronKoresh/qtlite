@@ -126,6 +126,7 @@ The editor supports:
 - **Line numbers** for easy navigation
 - **Tab management** for working with multiple files
 - **Auto-save** on compilation
+- **Ctrl+S** saves the current tab (to its file, or to the build directory if it has none)
 
 ### Building and Running
 

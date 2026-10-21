@@ -217,6 +217,7 @@ void QtLiteApp::buildEditorArea(QHBoxLayout* mainRowLayout) {
     connect(runButton, &QPushButton::clicked, this, &QtLiteApp::runCompilation);
     connect(bundleCodeButton, &QPushButton::clicked, this, &QtLiteApp::bundleCode);
     connect(addTabButton, &QPushButton::clicked, this, &QtLiteApp::createNewEditorTab);
+    connect(editorTabManager, &EditorTabManager::saveRequested, this, &QtLiteApp::saveCurrentFile);
     connect(fileBrowser, &QTreeView::doubleClicked, this, &QtLiteApp::openFileFromBrowser);
     connect(snippetMenu, &QMenu::triggered, this, &QtLiteApp::insertSnippet);
     connect(languageCombo, QOverload<const QString&>::of(&QComboBox::currentTextChanged),
@@ -418,6 +419,15 @@ void QtLiteApp::runCompilation() {
         compilationEngine->compileConsole(sourcePath);
     } else if (settings.language == "Python") {
         compilationEngine->compilePython(sourcePath);
+    }
+}
+
+void QtLiteApp::saveCurrentFile() {
+    const QString savedPath = editorTabManager->saveCurrentEditor(buildDirEdit->text());
+    if (savedPath.isEmpty()) {
+        outputLog->append("!!! FAILED to save the current file.");
+    } else {
+        outputLog->append("Saved: " + savedPath);
     }
 }
 
