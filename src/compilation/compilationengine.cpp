@@ -102,7 +102,10 @@ void CompilationEngine::compileQt(const QString& filePath) {
     QString code = codeFile.readAll();
     codeFile.close();
 
-    if (code.isEmpty()) return;
+    if (code.isEmpty()) {
+        outputLog->append("!!! FAILED: the file is empty: " + filePath);
+        return;
+    }
 
     if (!QDir(projectSettings.buildDir).exists() &&
         !QDir().mkpath(projectSettings.buildDir)) {

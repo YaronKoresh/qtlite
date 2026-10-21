@@ -57,3 +57,11 @@ equals(TEST, test_editortabmanager) {
     HEADERS += ../src/highlighting/cpphighlighter.h
     HEADERS += ../src/highlighting/pythonhighlighter.h
 }
+
+equals(TEST, test_compilationengine) {
+    TARGET = test_compilationengine
+    QT += widgets
+    SOURCES += test_compilationengine.cpp
+    SOURCES += ../src/compilation/compilationengine.cpp
+    HEADERS += ../src/compilation/compilationengine.h
+}
