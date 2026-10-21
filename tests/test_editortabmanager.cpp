@@ -2,6 +2,8 @@
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QFile>
+#include <QTextBlock>
+#include <QTextLayout>
 #include "../src/ui/editortabmanager.h"
 
 static QString readAll(const QString& path)
@@ -26,6 +28,7 @@ private slots:
     void testCtrlSEmitsSaveRequestedOnce();
     void testTwoUnsavedTabsWithTheSameTitleSaveToDifferentFiles();
     void testUnsavedTabDoesNotTakeThePathOfAnOpenFile();
+    void testHighlightingFollowsTheLanguageNotTheFileExtension();
 };
 
 void TestEditorTabManager::testSaveUnsavedTabWritesDefaultCppFileToBuildDir()
@@ -178,6 +181,30 @@ void TestEditorTabManager::testUnsavedTabDoesNotTakeThePathOfAnOpenFile()
     QVERIFY2(path != dir.path() + "/main.cpp", qPrintable(path));
     QCOMPARE(readAll(dir.path() + "/main.cpp"), QString("// opened from disk\n"));
     QCOMPARE(readAll(path), QString("// new tab\n"));
+}
+
+static bool hasFormattedRanges(CodeEditor* editor)
+{
+    QTest::qWait(50);
+    const QTextBlock block = editor->document()->firstBlock();
+    return block.layout() && !block.layout()->formats().isEmpty();
+}
+
+void TestEditorTabManager::testHighlightingFollowsTheLanguageNotTheFileExtension()
+{
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+
+    CodeEditor* pyNamedInCpp = manager.addNewTab("script.py");
+    pyNamedInCpp->setPlainText("# a python comment\n");
+    QVERIFY(!hasFormattedRanges(pyNamedInCpp));
+
+    manager.setLanguage("Python");
+    QVERIFY(hasFormattedRanges(pyNamedInCpp));
+
+    CodeEditor* cppNamedInPython = manager.addNewTab("program.cpp");
+    cppNamedInPython->setPlainText("# a python comment\n");
+    QVERIFY(hasFormattedRanges(cppNamedInPython));
 }
 
 QTEST_MAIN(TestEditorTabManager)

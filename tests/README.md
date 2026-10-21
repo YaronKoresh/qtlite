@@ -88,6 +88,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Default file names per language
   - Failure on unwritable targets
   - Unsaved tabs never share a file with another open tab
+  - Highlighting follows the selected language, not the file extension
 
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter

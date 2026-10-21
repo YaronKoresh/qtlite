@@ -110,7 +110,7 @@ All these settings are saved automatically and persist across sessions.
 
 1. Click the **"Add Tab"** button
 2. Enter a filename (e.g., `myapp.cpp`, `test.py`)
-3. The file extension determines the syntax highlighting
+3. The selected **Language** determines the syntax highlighting (the file extension does not)
 4. Start typing your code
 
 ### Opening Existing Files
@@ -391,9 +391,8 @@ The left panel shows your project directory:
 ### Syntax highlighting doesn't work
 
 **Solution:**
-1. Make sure your file has the correct extension (`.cpp`, `.h`, `.py`)
+1. Check that the correct language is selected in the dropdown (highlighting follows the selected language for every tab, whatever the file extension)
 2. Try closing and reopening the tab
-3. Check that the correct language is selected in the dropdown
 
 ---
 
