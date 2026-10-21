@@ -18,6 +18,7 @@ private slots:
     void testAssertDelAsyncAwaitAreKeywords();
     void testCommonBuiltinsAreHighlighted();
     void testMoreBuiltinsAreHighlighted();
+    void testDottedDecoratorIsColoredAsAWhole();
     void testCodeAfterStringWithHashIsNotComment();
     void testQuotesInsideCommentAreNotStrings();
     void testTripleQuoteInsideCommentDoesNotOpenString();
@@ -237,6 +238,15 @@ void TestPythonHighlighter::testMoreBuiltinsAreHighlighted()
         }
         QVERIFY2(colored, qPrintable(word));
     }
+}
+
+void TestPythonHighlighter::testDottedDecoratorIsColoredAsAWhole()
+{
+    const QString code = "@app.route(\"/\")\ndef home(): pass\n";
+
+    QCOMPARE(colorAt(code, 0, 1), QColor(Qt::darkMagenta));
+    QCOMPARE(colorAt(code, 0, 5), QColor(Qt::darkMagenta));
+    QCOMPARE(colorAt(code, 0, 9), QColor(Qt::darkMagenta));
 }
 
 QTEST_MAIN(TestPythonHighlighter)

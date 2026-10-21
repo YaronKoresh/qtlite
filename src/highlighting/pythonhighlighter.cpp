@@ -40,7 +40,7 @@ void PythonHighlighter::initializeBuiltins() {
 void PythonHighlighter::initializeDecorators() {
     QTextCharFormat decoratorFormat;
     decoratorFormat.setForeground(Qt::darkMagenta);
-    addHighlightingRule("@[A-Za-z0-9_]+", decoratorFormat);
+    addHighlightingRule("@[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*", decoratorFormat);
 }
 
 void PythonHighlighter::initializeComments() {
