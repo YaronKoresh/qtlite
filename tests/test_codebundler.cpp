@@ -16,6 +16,7 @@ private slots:
     void testBundleSameHeaderViaDotDotPathIsIncludedOnce();
     void testBundleIndentedSystemIncludeIsNotRepeated();
     void testBundleMissingRootFileFailsAndKeepsPreviousBundle();
+    void testBundleKeepsIncludeLineWhenLocalFileIsNotFound();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -270,6 +271,24 @@ void TestCodeBundler::testBundleMissingRootFileFailsAndKeepsPreviousBundle()
     QFile f(dir + "/main_bundled.cpp");
     QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
     QCOMPARE(QString::fromUtf8(f.readAll()), QString("previous good bundle\n"));
+}
+
+void TestCodeBundler::testBundleKeepsIncludeLineWhenLocalFileIsNotFound()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/found.h", "int found();\n");
+    writeFile(dir + "/main.cpp",
+              "#include \"found.h\"\n#include \"library/missing.h\"\nint main() { return found(); }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QVERIFY2(content.contains("#include \"library/missing.h\""), qPrintable(content));
+    QVERIFY2(!content.contains("FAILED"), qPrintable(content));
+    QVERIFY(content.contains("int found();"));
+    QVERIFY(!content.contains("#include \"found.h\""));
 }
 
 QTEST_MAIN(TestCodeBundler)

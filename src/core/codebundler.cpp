@@ -55,7 +55,9 @@ void CodeBundler::parseAndBundleFile(const QString& filePath, QTextStream& outSt
             QString includePath = QDir(rootDir).absoluteFilePath(includeName);
             includePath = QDir::cleanPath(QDir::fromNativeSeparators(includePath));
 
-            if (!processedIncludes.contains(includePath)) {
+            if (!QFileInfo(includePath).isFile()) {
+                outStream << line << "\n";
+            } else if (!processedIncludes.contains(includePath)) {
                 processedIncludes.insert(includePath);
                 outStream << "\n// --- Start of bundled file: " << includeName << " ---\n";
                 parseAndBundleFile(includePath, outStream, processedIncludes,
