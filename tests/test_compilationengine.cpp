@@ -26,6 +26,9 @@ private slots:
     void testSecondRunWhileRunningIsRejectedWithoutCrash();
     void testPathListsAreTrimmedInTheProFile();
     void testFailedProcessStartIsReportedAndEngineIsFreeAgain();
+    void testScriptOutputArrivingInPiecesStaysOnOneLine();
+    void testScriptOutputWithWindowsLineEndingsHasNoBlankLines();
+    void testMultiByteCharacterSplitAcrossReadsIsNotGarbled();
 };
 
 void TestCompilationEngine::testCompileQtMissingFileIsReported()
@@ -304,6 +307,88 @@ void TestCompilationEngine::testPathListsAreTrimmedInTheProFile()
     QCOMPARE(text.count("INCLUDEPATH +="), 3);
     QVERIFY2(text.contains("LIBS += \"C:/libs/mylib.lib\"\n"), qPrintable(text));
     QVERIFY2(text.contains("LIBS += C:/other/thing\n"), qPrintable(text));
+}
+
+static QStringList runScriptAndGetLines(const QString& code, QTextEdit& log)
+{
+    static QTemporaryDir dir;
+    const QString script = dir.path() + "/out.py";
+    writeFile(script, code.toUtf8());
+
+    CompilationEngine engine(&log);
+    ProjectSettings settings;
+    settings.buildDir = dir.path();
+    const QString launcher = dir.path() + "/python-launcher.sh";
+    writeFile(launcher, "#!/bin/sh\nexec \"" + QStandardPaths::findExecutable("python3").toUtf8() + "\" -S \"$@\"\n");
+    QFile::setPermissions(launcher, QFile::permissions(launcher) | QFileDevice::ExeOwner);
+    CompilerPaths paths;
+    paths.pythonExePath = launcher;
+    engine.setProjectSettings(settings);
+    engine.setCompilerPaths(paths);
+
+    engine.compilePython(script);
+    if (!waitForLog(log, "Script finished", 10000))
+        return QStringList();
+    QTest::qWait(100);
+    return log.toPlainText().split('\n');
+}
+
+void TestCompilationEngine::testScriptOutputArrivingInPiecesStaysOnOneLine()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Runs a POSIX python3 script");
+#else
+    if (QStandardPaths::findExecutable("python3").isEmpty())
+        QSKIP("python3 is not installed");
+
+    QTextEdit log;
+    const QStringList lines = runScriptAndGetLines(
+        "import sys, time\n"
+        "sys.stdout.write('Loading...'); sys.stdout.flush()\n"
+        "time.sleep(0.4)\n"
+        "sys.stdout.write(' done\\n'); sys.stdout.flush()\n", log);
+
+    QVERIFY2(lines.contains("Loading... done"), qPrintable(log.toPlainText()));
+#endif
+}
+
+void TestCompilationEngine::testScriptOutputWithWindowsLineEndingsHasNoBlankLines()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Runs a POSIX python3 script");
+#else
+    if (QStandardPaths::findExecutable("python3").isEmpty())
+        QSKIP("python3 is not installed");
+
+    QTextEdit log;
+    const QStringList lines = runScriptAndGetLines(
+        "import sys\n"
+        "sys.stdout.write('first\\r\\nsecond\\r\\n')\n", log);
+
+    const int first = lines.indexOf("first");
+    QVERIFY2(first >= 0, qPrintable(log.toPlainText()));
+    QCOMPARE(lines.value(first + 1), QString("second"));
+#endif
+}
+
+void TestCompilationEngine::testMultiByteCharacterSplitAcrossReadsIsNotGarbled()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Runs a POSIX python3 script");
+#else
+    if (QStandardPaths::findExecutable("python3").isEmpty())
+        QSKIP("python3 is not installed");
+
+    QTextEdit log;
+    const QStringList lines = runScriptAndGetLines(
+        "import sys, time\n"
+        "b = sys.stdout.buffer\n"
+        "b.write(b'caf\\xc3'); b.flush()\n"
+        "time.sleep(0.4)\n"
+        "b.write(b'\\xa9\\n'); b.flush()\n", log);
+
+    QVERIFY2(lines.contains(QString::fromUtf8("caf\xc3\xa9")), qPrintable(log.toPlainText()));
+#endif
 }
 
 QTEST_MAIN(TestCompilationEngine)

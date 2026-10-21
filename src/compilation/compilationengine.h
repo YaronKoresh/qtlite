@@ -20,6 +20,7 @@ private:
     ProjectSettings projectSettings;
     QProcess* currentProcess;
     QTextEdit* outputLog;
+    bool processLineOpen;
 
 public:
     CompilationEngine(QTextEdit* log);
@@ -33,6 +34,8 @@ public:
 
 private:
     bool rejectIfBusy();
+    void appendProcessText(const QString& text);
+    void forwardProcessOutput(QProcess* process);
     QString generateProFile(const QString& code);
     void executeProcess(const QString& command, const QString& exeToRun);
     void handleBuildCompletion(int exitCode, QProcess::ExitStatus exitStatus, const QString& exeToRun);

@@ -1,5 +1,10 @@
 #include "compilationengine.h"
 #include <QTextStream>
+#include <QScrollBar>
+#include <QStringDecoder>
+#include <QTextCursor>
+#include <QTextBlock>
+#include <memory>
 
 static QStringList splitPathList(const QString& text) {
     QStringList result;
@@ -10,7 +15,7 @@ static QStringList splitPathList(const QString& text) {
     return result;
 }
 
-CompilationEngine::CompilationEngine(QTextEdit* log) : currentProcess(nullptr), outputLog(log) {}
+CompilationEngine::CompilationEngine(QTextEdit* log) : currentProcess(nullptr), outputLog(log), processLineOpen(false) {}
 
 void CompilationEngine::setCompilerPaths(const CompilerPaths& paths) {
     compilerPaths = paths;
@@ -18,6 +23,31 @@ void CompilationEngine::setCompilerPaths(const CompilerPaths& paths) {
 
 void CompilationEngine::setProjectSettings(const ProjectSettings& settings) {
     projectSettings = settings;
+}
+
+void CompilationEngine::appendProcessText(const QString& text) {
+    if (text.isEmpty()) return;
+    QString clean = text;
+    clean.replace("\r\n", "\n");
+
+    QTextCursor cursor(outputLog->document());
+    cursor.movePosition(QTextCursor::End);
+    if (!processLineOpen && !cursor.block().text().isEmpty()) cursor.insertBlock();
+    cursor.insertText(clean);
+    processLineOpen = !clean.endsWith('\n');
+    outputLog->verticalScrollBar()->setValue(outputLog->verticalScrollBar()->maximum());
+}
+
+void CompilationEngine::forwardProcessOutput(QProcess* process) {
+    processLineOpen = false;
+    auto outDecoder = std::make_shared<QStringDecoder>(QStringDecoder::Utf8);
+    auto errDecoder = std::make_shared<QStringDecoder>(QStringDecoder::Utf8);
+    connect(process, &QProcess::readyReadStandardOutput, this, [this, process, outDecoder]() {
+        appendProcessText(outDecoder->decode(process->readAllStandardOutput()));
+    });
+    connect(process, &QProcess::readyReadStandardError, this, [this, process, errDecoder]() {
+        appendProcessText(errDecoder->decode(process->readAllStandardError()));
+    });
 }
 
 bool CompilationEngine::rejectIfBusy() {
@@ -34,12 +64,7 @@ void CompilationEngine::compilePython(const QString& filePath) {
     currentProcess = process;
     process->setWorkingDirectory(projectSettings.buildDir);
 
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        outputLog->append(process->readAllStandardOutput());
-    });
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        outputLog->append(process->readAllStandardError());
-    });
+    forwardProcessOutput(process);
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [this, process]() {
                 outputLog->append("\n...Script finished.");
@@ -256,12 +281,7 @@ void CompilationEngine::executeProcess(const QString& command, const QString& ex
     QProcess* process = new QProcess(this);
     currentProcess = process;
 
-    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
-        outputLog->append(process->readAllStandardOutput());
-    });
-    connect(process, &QProcess::readyReadStandardError, [this, process]() {
-        outputLog->append(process->readAllStandardError());
-    });
+    forwardProcessOutput(process);
 
     connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [this, exeToRun](int exitCode, QProcess::ExitStatus exitStatus) {
