@@ -28,7 +28,10 @@ void CppHighlighter::initializeCppKeywords() {
         "\\belse\\b", "\\bwhile\\b", "\\breturn\\b", "\\bnew\\b",
         "\\bdelete\\b", "\\bthis\\b", "\\btrue\\b", "\\bfalse\\b",
         "\\bauto\\b", "\\bextern\\b", "\\bregister\\b", "\\bgoto\\b",
-        "\\bsizeof\\b"
+        "\\bsizeof\\b", "\\bbreak\\b", "\\bcontinue\\b", "\\bswitch\\b",
+        "\\bcase\\b", "\\bdefault\\b", "\\bdo\\b", "\\btry\\b",
+        "\\bcatch\\b", "\\bthrow\\b", "\\busing\\b", "\\bnullptr\\b",
+        "\\bconstexpr\\b", "\\bnoexcept\\b", "\\boverride\\b", "\\bfinal\\b"
     };
     foreach (const QString& keyword, keywords) {
         addHighlightingRule(keyword, keywordFormat);

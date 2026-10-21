@@ -102,6 +102,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
 
 - **test_cpphighlighter.cpp** - Tests for CppHighlighter block comment state
   - A comment start inside a line comment or string does not open a block
+  - Control flow and modern C++ keywords are highlighted
   - Strings with escaped quotes are colored as one string
 
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting

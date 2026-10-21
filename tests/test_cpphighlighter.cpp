@@ -16,6 +16,7 @@ private slots:
     void testBlockCommentOnOneLineDoesNotContinue();
     void testSlashStarSlashDoesNotCloseItself();
     void testStringWithEscapedQuoteIsColoredAsOneString();
+    void testControlFlowAndModernKeywordsAreHighlighted();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -106,6 +107,21 @@ void TestCppHighlighter::testStringWithEscapedQuoteIsColoredAsOneString()
     }
 
     QCOMPARE(covered, 6);
+}
+
+void TestCppHighlighter::testControlFlowAndModernKeywordsAreHighlighted()
+{
+    const QStringList words = {"break", "continue", "switch", "case", "default", "do", "try", "catch",
+                               "throw", "using", "nullptr", "constexpr", "noexcept", "override", "final"};
+    for (const QString& word : words) {
+        bool colored = false;
+        for (const QTextLayout::FormatRange& range : formatsOfFirstLine(word + " x;")) {
+            if (range.start == 0 && range.length == word.length() &&
+                range.format.foreground().color() == QColor(Qt::darkBlue))
+                colored = true;
+        }
+        QVERIFY2(colored, qPrintable(word));
+    }
 }
 
 QTEST_MAIN(TestCppHighlighter)
