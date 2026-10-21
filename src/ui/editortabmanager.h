@@ -36,6 +36,7 @@ private slots:
     void closeTab(int index);
 
 private:
+    QString uniquePathAmongOpenFiles(const QString& wanted, const CodeEditor* self) const;
     void updateEditorHighlighter(CodeEditor* editor);
     void updateAllHighlighters();
 };

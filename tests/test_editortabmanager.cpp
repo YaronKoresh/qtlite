@@ -24,6 +24,8 @@ private slots:
     void testSaveCreatesMissingBuildDir();
     void testSaveWithUnwritableTargetReturnsEmpty();
     void testCtrlSEmitsSaveRequestedOnce();
+    void testTwoUnsavedTabsWithTheSameTitleSaveToDifferentFiles();
+    void testUnsavedTabDoesNotTakeThePathOfAnOpenFile();
 };
 
 void TestEditorTabManager::testSaveUnsavedTabWritesDefaultCppFileToBuildDir()
@@ -131,6 +133,51 @@ void TestEditorTabManager::testCtrlSEmitsSaveRequestedOnce()
     QTest::keyClick(editor, Qt::Key_S, Qt::ControlModifier);
 
     QCOMPARE(spy.count(), 1);
+}
+
+void TestEditorTabManager::testTwoUnsavedTabsWithTheSameTitleSaveToDifferentFiles()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    CodeEditor* first = manager.addNewTab("untitled.cpp");
+    first->setPlainText("// first\n");
+    const QString firstPath = manager.saveCurrentEditor(dir.path());
+    QCOMPARE(firstPath, dir.path() + "/untitled.cpp");
+
+    CodeEditor* second = manager.addNewTab("untitled.cpp");
+    second->setPlainText("// second\n");
+    const QString secondPath = manager.saveCurrentEditor(dir.path());
+
+    QVERIFY(!secondPath.isEmpty());
+    QVERIFY2(secondPath != firstPath, qPrintable(secondPath));
+    QCOMPARE(readAll(firstPath), QString("// first\n"));
+    QCOMPARE(readAll(secondPath), QString("// second\n"));
+    QCOMPARE(QFileInfo(secondPath).suffix(), QString("cpp"));
+    QCOMPARE(QFileInfo(secondPath).absolutePath(), dir.path());
+}
+
+void TestEditorTabManager::testUnsavedTabDoesNotTakeThePathOfAnOpenFile()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QFile existing(dir.path() + "/main.cpp");
+    QVERIFY(existing.open(QIODevice::WriteOnly));
+    existing.write("// opened from disk\n");
+    existing.close();
+
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    manager.openFile(dir.path() + "/main.cpp");
+    CodeEditor* fresh = manager.addNewTab("main.cpp");
+    fresh->setPlainText("// new tab\n");
+
+    const QString path = manager.saveCurrentEditor(dir.path());
+
+    QVERIFY2(path != dir.path() + "/main.cpp", qPrintable(path));
+    QCOMPARE(readAll(dir.path() + "/main.cpp"), QString("// opened from disk\n"));
+    QCOMPARE(readAll(path), QString("// new tab\n"));
 }
 
 QTEST_MAIN(TestEditorTabManager)

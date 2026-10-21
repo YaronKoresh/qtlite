@@ -85,6 +85,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Saving the current tab before a build
   - Default file names per language
   - Failure on unwritable targets
+  - Unsaved tabs never share a file with another open tab
 
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting
   - A second run while a process is running is rejected

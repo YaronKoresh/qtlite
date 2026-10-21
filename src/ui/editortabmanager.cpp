@@ -63,7 +63,7 @@ QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
         const QString fileName = titleFitsLanguage ? QFileInfo(title).fileName()
                                                    : QString(python ? "main.py" : "main.cpp");
         if (buildDir.isEmpty() || !QDir().mkpath(buildDir)) return QString();
-        path = QDir(buildDir).absoluteFilePath(fileName);
+        path = uniquePathAmongOpenFiles(QDir(buildDir).absoluteFilePath(fileName), editor);
     }
 
     QSaveFile file(path);
@@ -73,6 +73,30 @@ QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
 
     editor->setFilePath(path);
     return path;
+}
+
+QString EditorTabManager::uniquePathAmongOpenFiles(const QString& wanted, const CodeEditor* self) const {
+    auto taken = [&](const QString& candidate) {
+        const QString clean = QDir::cleanPath(candidate);
+        for (int i = 0; i < editorTabs->count(); ++i) {
+            CodeEditor* other = qobject_cast<CodeEditor*>(editorTabs->widget(i));
+            if (other && other != self && !other->filePath().isEmpty() &&
+                QDir::cleanPath(other->filePath()) == clean) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    if (!taken(wanted)) return wanted;
+
+    const QFileInfo info(wanted);
+    const QString suffix = info.suffix().isEmpty() ? QString() : "." + info.suffix();
+    for (int n = 2;; ++n) {
+        const QString candidate = info.absolutePath() + "/" + info.completeBaseName() +
+                                  "_" + QString::number(n) + suffix;
+        if (!taken(candidate)) return candidate;
+    }
 }
 
 void EditorTabManager::closeTab(int index) {
