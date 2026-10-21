@@ -21,6 +21,7 @@ private slots:
     void testBundleKeepsSystemIncludeOutsideConditionalWhenHeaderOnlyIncludesItConditionally();
     void testBundleKeepsSystemIncludeInBothBranchesOfAConditional();
     void testBundleStillDeduplicatesSystemIncludesInsideIncludeGuards();
+    void testBundleIgnoresIncludesInsideBlockComments();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -358,6 +359,24 @@ void TestCodeBundler::testBundleStillDeduplicatesSystemIncludesInsideIncludeGuar
     const QString content = bundleToString(dir + "/main.cpp");
 
     QCOMPARE(content.count("#include <vector>"), 1);
+}
+
+void TestCodeBundler::testBundleIgnoresIncludesInsideBlockComments()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/old.h", "int from_old = 1;\n");
+    writeFile(dir + "/main.cpp",
+              "/*\n#include <vector>\n#include \"old.h\"\n*/\n#include <vector>\n"
+              "/* one line */ int x;\nint main() { return 0; }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QVERIFY2(!content.contains("from_old"), qPrintable(content));
+    QCOMPARE(content.count("#include <vector>"), 2);
+    QVERIFY2(content.lastIndexOf("#include <vector>") > content.indexOf("*/"), qPrintable(content));
 }
 
 QTEST_MAIN(TestCodeBundler)

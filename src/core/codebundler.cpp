@@ -36,6 +36,41 @@ bool CodeBundler::bundleCode(const QString& rootFilePath, QString& outputPath) {
     return outFile.commit();
 }
 
+// Updates whether the text after this line is still inside a /* */ comment.
+static bool endsInsideBlockComment(const QString& line, bool inBlock) {
+    int i = 0;
+    const int length = line.length();
+    while (i < length) {
+        if (inBlock) {
+            const int end = line.indexOf("*/", i);
+            if (end == -1) return true;
+            inBlock = false;
+            i = end + 2;
+            continue;
+        }
+        const QChar c = line.at(i);
+        if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
+            int j = i + 1;
+            while (j < length && line.at(j) != c) {
+                if (line.at(j) == QLatin1Char('\\')) ++j;
+                ++j;
+            }
+            i = j + 1;
+            continue;
+        }
+        if (c == QLatin1Char('/') && i + 1 < length) {
+            if (line.at(i + 1) == QLatin1Char('/')) return false;
+            if (line.at(i + 1) == QLatin1Char('*')) {
+                inBlock = true;
+                i += 2;
+                continue;
+            }
+        }
+        ++i;
+    }
+    return inBlock;
+}
+
 static QString conditionKey(const QStringList& conditions) {
     return conditions.join(" && ");
 }
@@ -102,8 +137,16 @@ void CodeBundler::parseAndBundleFile(const QString& filePath, QTextStream& outSt
     QStringList conditions = activeConditions;
     QList<int> ownLevels;
 
+    bool inBlockComment = false;
     for (int lineNo = 0; lineNo < lines.size(); ++lineNo) {
         const QString& line = lines[lineNo];
+
+        if (inBlockComment) {
+            outStream << line << "\n";
+            inBlockComment = endsInsideBlockComment(line, true);
+            continue;
+        }
+        inBlockComment = endsInsideBlockComment(line, false);
 
         if (lineNo == guardOpen) {
             conditions << QString();
