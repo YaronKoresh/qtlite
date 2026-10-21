@@ -23,7 +23,8 @@ void PythonHighlighter::initializePythonKeywords() {
         "\\braise\\b", "\\bwith\\b", "\\bas\\b", "\\bimport\\b",
         "\\bfrom\\b", "\\bclass\\b", "\\bdef\\b", "\\blambda\\b",
         "\\bglobal\\b", "\\bnonlocal\\b", "\\bin\\b", "\\bis\\b",
-        "\\bnot\\b", "\\band\\b", "\\bor\\b"
+        "\\bnot\\b", "\\band\\b", "\\bor\\b", "\\bassert\\b",
+        "\\bdel\\b", "\\basync\\b", "\\bawait\\b"
     };
     foreach (const QString& keyword, keywords) {
         addHighlightingRule(keyword, keywordFormat);

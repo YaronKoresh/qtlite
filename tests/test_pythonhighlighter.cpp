@@ -15,6 +15,7 @@ private slots:
     void testMixedDelimitersDoNotCloseEachOther();
     void testStringStaysOpenUntilItsClosingDelimiter();
     void testStringsWithEscapedQuotesAreColoredAsOneString();
+    void testAssertDelAsyncAwaitAreKeywords();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -97,6 +98,25 @@ void TestPythonHighlighter::testStringsWithEscapedQuotesAreColoredAsOneString()
 {
     QCOMPARE(stringColoredLength("x = \"a\\\"b\" + y"), 6);
     QCOMPARE(stringColoredLength("x = 'it\\'s' + y"), 7);
+}
+
+void TestPythonHighlighter::testAssertDelAsyncAwaitAreKeywords()
+{
+    const QStringList words = {"assert", "del", "async", "await"};
+    for (const QString& word : words) {
+        QTextDocument doc;
+        doc.setPlainText(word + " x");
+        PythonHighlighter highlighter(&doc);
+        highlighter.rehighlight();
+
+        bool colored = false;
+        for (const QTextLayout::FormatRange& range : doc.firstBlock().layout()->formats()) {
+            if (range.start == 0 && range.length == word.length() &&
+                range.format.foreground().color() == QColor(Qt::darkBlue))
+                colored = true;
+        }
+        QVERIFY2(colored, qPrintable(word));
+    }
 }
 
 QTEST_MAIN(TestPythonHighlighter)

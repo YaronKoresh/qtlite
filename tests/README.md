@@ -97,6 +97,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter
   - Mixed delimiters do not close each other
+  - assert, del, async and await are highlighted as keywords
   - Strings with escaped quotes are colored as one string
 
 - **test_cpphighlighter.cpp** - Tests for CppHighlighter block comment state
