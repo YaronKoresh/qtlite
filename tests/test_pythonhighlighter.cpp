@@ -16,6 +16,7 @@ private slots:
     void testStringStaysOpenUntilItsClosingDelimiter();
     void testStringsWithEscapedQuotesAreColoredAsOneString();
     void testAssertDelAsyncAwaitAreKeywords();
+    void testCommonBuiltinsAreHighlighted();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -113,6 +114,26 @@ void TestPythonHighlighter::testAssertDelAsyncAwaitAreKeywords()
         for (const QTextLayout::FormatRange& range : doc.firstBlock().layout()->formats()) {
             if (range.start == 0 && range.length == word.length() &&
                 range.format.foreground().color() == QColor(Qt::darkBlue))
+                colored = true;
+        }
+        QVERIFY2(colored, qPrintable(word));
+    }
+}
+
+void TestPythonHighlighter::testCommonBuiltinsAreHighlighted()
+{
+    const QStringList words = {"bool", "range", "open", "input", "super", "cls", "enumerate", "zip",
+                               "sorted", "isinstance", "sum", "min", "max", "abs"};
+    for (const QString& word : words) {
+        QTextDocument doc;
+        doc.setPlainText(word + "(x)");
+        PythonHighlighter highlighter(&doc);
+        highlighter.rehighlight();
+
+        bool colored = false;
+        for (const QTextLayout::FormatRange& range : doc.firstBlock().layout()->formats()) {
+            if (range.start == 0 && range.length == word.length() &&
+                range.format.foreground().color() == QColor(0, 100, 100))
                 colored = true;
         }
         QVERIFY2(colored, qPrintable(word));

@@ -98,6 +98,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Docstrings close on the line of their closing delimiter
   - Mixed delimiters do not close each other
   - assert, del, async and await are highlighted as keywords
+  - Common built-in functions are highlighted
   - Strings with escaped quotes are colored as one string
 
 - **test_cpphighlighter.cpp** - Tests for CppHighlighter block comment state
