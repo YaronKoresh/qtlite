@@ -1,8 +1,8 @@
 #include "codebundler.h"
 
 CodeBundler::CodeBundler() {
-    localIncludeRegex.setPattern("^\\s*#include\\s*\"([^\"]+)\"");
-    systemIncludeRegex.setPattern("^\\s*#include\\s*<([^>]+)>");
+    localIncludeRegex.setPattern("^\\s*#\\s*include\\s*\"([^\"]+)\"");
+    systemIncludeRegex.setPattern("^\\s*#\\s*include\\s*<([^>]+)>");
 }
 
 bool CodeBundler::bundleCode(const QString& rootFilePath, QString& outputPath) {

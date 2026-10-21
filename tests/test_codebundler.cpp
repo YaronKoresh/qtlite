@@ -17,6 +17,7 @@ private slots:
     void testBundleIndentedSystemIncludeIsNotRepeated();
     void testBundleMissingRootFileFailsAndKeepsPreviousBundle();
     void testBundleKeepsIncludeLineWhenLocalFileIsNotFound();
+    void testBundleHandlesSpaceBetweenHashAndInclude();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -289,6 +290,24 @@ void TestCodeBundler::testBundleKeepsIncludeLineWhenLocalFileIsNotFound()
     QVERIFY2(!content.contains("FAILED"), qPrintable(content));
     QVERIFY(content.contains("int found();"));
     QVERIFY(!content.contains("#include \"found.h\""));
+}
+
+void TestCodeBundler::testBundleHandlesSpaceBetweenHashAndInclude()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/a.h", "# include <vector>\nint a();\n");
+    writeFile(dir + "/main.cpp",
+              "#include <vector>\n#  include \"a.h\"\n#  include \"a.h\"\nint main() { return a(); }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QVERIFY2(content.contains("int a();"), qPrintable(content));
+    QVERIFY2(!content.contains("include \"a.h\""), qPrintable(content.left(400)));
+    QCOMPARE(content.count("int a();"), 1);
+    QCOMPARE(content.count("include <vector>"), 1);
 }
 
 QTEST_MAIN(TestCodeBundler)

@@ -78,6 +78,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Python snippets contain Python syntax only
 
 - **test_codebundler.cpp** - Tests for CodeBundler class
+  - Include lines with spaces after the hash are bundled
   - Simple file bundling
   - Local includes resolution
   - System includes handling
