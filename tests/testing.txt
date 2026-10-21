@@ -18,3 +18,4 @@ To build test_snippetmanager: qmake "TEST=test_snippetmanager" tests.pro
 To build test_codebundler: qmake "TEST=test_codebundler" tests.pro
 To build test_editortabmanager: qmake "TEST=test_editortabmanager" tests.pro
 To build test_compilationengine: qmake "TEST=test_compilationengine" tests.pro
+To build test_pythonhighlighter: qmake "TEST=test_pythonhighlighter" tests.pro

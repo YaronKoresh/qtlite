@@ -65,3 +65,12 @@ equals(TEST, test_compilationengine) {
     SOURCES += ../src/compilation/compilationengine.cpp
     HEADERS += ../src/compilation/compilationengine.h
 }
+
+equals(TEST, test_pythonhighlighter) {
+    TARGET = test_pythonhighlighter
+    QT += widgets
+    SOURCES += test_pythonhighlighter.cpp
+    SOURCES += ../src/highlighting/pythonhighlighter.cpp
+    HEADERS += ../src/highlighting/pythonhighlighter.h
+    HEADERS += ../src/highlighting/syntaxhighlighterbase.h
+}

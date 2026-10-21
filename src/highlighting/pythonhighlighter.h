@@ -15,7 +15,6 @@ protected:
 
 private:
     QRegularExpression multiLineStringStartExpression;
-    QRegularExpression multiLineStringEndExpression;
     QTextCharFormat multiLineStringFormat;
 
     void initializePythonKeywords();

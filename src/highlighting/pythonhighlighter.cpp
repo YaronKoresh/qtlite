@@ -56,28 +56,43 @@ void PythonHighlighter::initializeStrings() {
 void PythonHighlighter::initializeMultilineStrings() {
     multiLineStringFormat.setForeground(QColor(163, 21, 21));
     multiLineStringStartExpression = QRegularExpression("(\"\"\"|\'\'\')");
-    multiLineStringEndExpression = QRegularExpression("(\"\"\"|\'\'\')");
 }
 
 void PythonHighlighter::highlightMultilineStrings(const QString& text) {
     setCurrentBlockState(0);
+
+    const int previous = previousBlockState();
+    const bool continuing = (previous == 1 || previous == 2);
     int startIndex = 0;
-    if (previousBlockState() != 1) startIndex = text.indexOf(multiLineStringStartExpression);
-    else multiLineStringEndExpression = multiLineStringStartExpression;
+    QString delimiter;
+    bool insideFromPreviousLine = continuing;
+
+    if (continuing) {
+        delimiter = (previous == 1) ? QStringLiteral("\"\"\"") : QStringLiteral("\'\'\'");
+    } else {
+        QRegularExpressionMatch start = multiLineStringStartExpression.match(text);
+        startIndex = start.hasMatch() ? start.capturedStart() : -1;
+        if (start.hasMatch()) delimiter = start.captured(1);
+    }
 
     while (startIndex >= 0) {
-        QRegularExpressionMatch match = multiLineStringEndExpression.match(text, startIndex + 3);
-        int endIndex = match.capturedStart();
+        const int searchFrom = insideFromPreviousLine ? startIndex : startIndex + delimiter.length();
+        const int endIndex = text.indexOf(delimiter, searchFrom);
         int stringLength;
 
         if (endIndex == -1) {
-            setCurrentBlockState(1);
+            setCurrentBlockState(delimiter == QLatin1String("\"\"\"") ? 1 : 2);
             stringLength = text.length() - startIndex;
         } else {
-            stringLength = endIndex - startIndex + match.capturedLength();
+            stringLength = endIndex - startIndex + delimiter.length();
         }
 
         setFormat(startIndex, stringLength, multiLineStringFormat);
-        startIndex = text.indexOf(multiLineStringStartExpression, startIndex + stringLength);
+        insideFromPreviousLine = false;
+
+        QRegularExpressionMatch next = multiLineStringStartExpression.match(text, startIndex + stringLength);
+        if (!next.hasMatch()) break;
+        startIndex = next.capturedStart();
+        delimiter = next.captured(1);
     }
 }
