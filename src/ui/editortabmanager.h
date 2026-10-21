@@ -30,6 +30,7 @@ public:
     void setLanguage(const QString& lang);
     void insertSnippet(const QString& snippet);
     QString saveCurrentEditor(const QString& buildDir);
+    static QString normalizeNewFileName(const QString& typed);
     void setDiscardConfirmer(std::function<bool(const QString&)> confirmer);
 
 signals:

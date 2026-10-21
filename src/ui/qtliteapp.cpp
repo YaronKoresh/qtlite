@@ -258,13 +258,9 @@ void QtLiteApp::createNewEditorTab() {
     QString fileName = QInputDialog::getText(this, "New Tab", "Enter file name:",
                                              QLineEdit::Normal, "untitled.cpp", &ok);
 
-    if (ok && !fileName.isEmpty()) {
-        if (!fileName.endsWith(".cpp") && !fileName.endsWith(".py") &&
-            !fileName.endsWith(".c") && !fileName.endsWith(".h")) {
-            fileName += ".cpp";
-        }
-
-        editorTabManager->addNewTab(fileName);
+    if (ok) {
+        fileName = EditorTabManager::normalizeNewFileName(fileName);
+        if (!fileName.isEmpty()) editorTabManager->addNewTab(fileName);
     }
 }
 

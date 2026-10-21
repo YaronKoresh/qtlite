@@ -31,6 +31,8 @@ private slots:
     void testHighlightingFollowsTheLanguageNotTheFileExtension();
     void testClosingModifiedTabAsksAndCancelKeepsIt();
     void testClosingCleanOrSavedTabDoesNotAsk();
+    void testNewFileNamesKeepKnownExtensionsAndDropFolders();
+    void testSourceExtensionsCcAndCxxSaveUnderTheirOwnName();
 };
 
 void TestEditorTabManager::testSaveUnsavedTabWritesDefaultCppFileToBuildDir()
@@ -263,6 +265,31 @@ void TestEditorTabManager::testClosingCleanOrSavedTabDoesNotAsk()
 
     QCOMPARE(asked, 0);
     QCOMPARE(tabs.count(), 1);
+}
+
+void TestEditorTabManager::testNewFileNamesKeepKnownExtensionsAndDropFolders()
+{
+    QCOMPARE(EditorTabManager::normalizeNewFileName("app.cpp"), QString("app.cpp"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("util.hpp"), QString("util.hpp"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("old.cc"), QString("old.cc"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("tool.PY"), QString("tool.PY"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("  spaced.py  "), QString("spaced.py"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("notes"), QString("notes.cpp"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("readme.txt"), QString("readme.txt.cpp"));
+    QCOMPARE(EditorTabManager::normalizeNewFileName("../escape/up.cpp"), QString("up.cpp"));
+    QVERIFY(EditorTabManager::normalizeNewFileName("   ").isEmpty());
+}
+
+void TestEditorTabManager::testSourceExtensionsCcAndCxxSaveUnderTheirOwnName()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    CodeEditor* editor = manager.addNewTab("legacy.cc");
+    editor->setPlainText("int x;\n");
+
+    QCOMPARE(manager.saveCurrentEditor(dir.path()), dir.path() + "/legacy.cc");
 }
 
 QTEST_MAIN(TestEditorTabManager)

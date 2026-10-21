@@ -71,7 +71,8 @@ QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
         const bool python = currentLanguage == "Python";
         const QString title = editorTabs->tabText(editorTabs->indexOf(editor));
         const QString suffix = QFileInfo(title).suffix().toLower();
-        const bool titleFitsLanguage = python ? suffix == "py" : (suffix == "cpp" || suffix == "c");
+        const bool titleFitsLanguage = python ? suffix == "py"
+                                              : (suffix == "cpp" || suffix == "cc" || suffix == "cxx" || suffix == "c");
         const QString fileName = titleFitsLanguage ? QFileInfo(title).fileName()
                                                    : QString(python ? "main.py" : "main.cpp");
         if (buildDir.isEmpty() || !QDir().mkpath(buildDir)) return QString();
@@ -86,6 +87,15 @@ QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
     editor->document()->setModified(false);
     editor->setFilePath(path);
     return path;
+}
+
+QString EditorTabManager::normalizeNewFileName(const QString& typed) {
+    const QString name = QFileInfo(typed.trimmed()).fileName();
+    if (name.isEmpty()) return QString();
+
+    static const QStringList known = {"cpp", "cc", "cxx", "c", "h", "hpp", "hxx", "py"};
+    if (known.contains(QFileInfo(name).suffix().toLower())) return name;
+    return name + ".cpp";
 }
 
 QString EditorTabManager::uniquePathAmongOpenFiles(const QString& wanted, const CodeEditor* self) const {

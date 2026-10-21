@@ -90,6 +90,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Unsaved tabs never share a file with another open tab
   - Highlighting follows the selected language, not the file extension
   - Closing a tab with unsaved changes asks first, and cancel keeps the tab
+  - New file names keep known C++ and Python extensions and drop folders
 
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter
