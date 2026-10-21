@@ -21,6 +21,8 @@ private slots:
     void testQuotesInsideCommentAreNotStrings();
     void testTripleQuoteInsideCommentDoesNotOpenString();
     void testTripleQuoteInsideSingleLineStringDoesNotOpenString();
+    void testEscapedQuoteBeforeTripleQuoteDoesNotCloseTheString();
+    void testEscapedQuoteBeforeClosingTripleQuoteOnLaterLine();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -193,6 +195,25 @@ void TestPythonHighlighter::testTripleQuoteInsideSingleLineStringDoesNotOpenStri
 
     QCOMPARE(states.at(0), 0);
     QCOMPARE(states.at(1), 0);
+}
+
+void TestPythonHighlighter::testEscapedQuoteBeforeTripleQuoteDoesNotCloseTheString()
+{
+    const QString code = "s = \"\"\"say \\\"\"\" hi\"\"\"\nx = 1\n";
+    const QList<int> states = blockStates(code);
+
+    QCOMPARE(states.at(0), 0);
+    QCOMPARE(colorAt(code, 0, 14), QColor(163, 21, 21));
+}
+
+void TestPythonHighlighter::testEscapedQuoteBeforeClosingTripleQuoteOnLaterLine()
+{
+    const QString code = "s = \"\"\"first\nsay \\\"\"\" hi\"\"\"\nx = 1\n";
+    const QList<int> states = blockStates(code);
+
+    QCOMPARE(states.at(0), 1);
+    QCOMPARE(states.at(1), 0);
+    QCOMPARE(states.at(2), 0);
 }
 
 QTEST_MAIN(TestPythonHighlighter)

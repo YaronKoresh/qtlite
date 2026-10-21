@@ -23,6 +23,7 @@ private:
     void initializeStrings();
     void initializeMultilineStrings();
     void highlightMultilineStrings(const QString& text);
+    static int findClosingDelimiter(const QString& text, const QString& delimiter, int from);
     void paintLiteral(int start, int end, const QTextCharFormat& format);
 };
 

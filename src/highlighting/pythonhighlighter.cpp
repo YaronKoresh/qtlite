@@ -56,6 +56,19 @@ void PythonHighlighter::initializeMultilineStrings() {
 }
 
 
+int PythonHighlighter::findClosingDelimiter(const QString& text, const QString& delimiter, int from) {
+    int j = from;
+    while (j < text.length()) {
+        if (text.at(j) == QLatin1Char('\\')) {
+            j += 2;
+            continue;
+        }
+        if (text.mid(j, 3) == delimiter) return j;
+        ++j;
+    }
+    return -1;
+}
+
 void PythonHighlighter::highlightMultilineStrings(const QString& text) {
     setCurrentBlockState(0);
 
@@ -65,7 +78,7 @@ void PythonHighlighter::highlightMultilineStrings(const QString& text) {
 
     if (previous == 1 || previous == 2) {
         const QString delimiter = (previous == 1) ? QStringLiteral("\"\"\"") : QStringLiteral("\'\'\'");
-        const int endIndex = text.indexOf(delimiter, 0);
+        const int endIndex = findClosingDelimiter(text, delimiter, 0);
         const int stringEnd = (endIndex == -1) ? length : endIndex + 3;
         paintLiteral(0, stringEnd, multiLineStringFormat);
         if (endIndex == -1) {
@@ -86,7 +99,7 @@ void PythonHighlighter::highlightMultilineStrings(const QString& text) {
         if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
             const QString triple = QString(3, c);
             if (text.mid(i, 3) == triple) {
-                const int endIndex = text.indexOf(triple, i + 3);
+                const int endIndex = findClosingDelimiter(text, triple, i + 3);
                 const int stringEnd = (endIndex == -1) ? length : endIndex + 3;
                 paintLiteral(i, stringEnd, multiLineStringFormat);
                 if (endIndex == -1) {
