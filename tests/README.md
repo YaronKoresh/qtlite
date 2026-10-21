@@ -89,6 +89,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Failure on unwritable targets
   - Unsaved tabs never share a file with another open tab
   - Highlighting follows the selected language, not the file extension
+  - Closing a tab with unsaved changes asks first, and cancel keeps the tab
 
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter

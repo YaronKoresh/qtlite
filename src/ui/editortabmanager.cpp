@@ -1,4 +1,5 @@
 #include "editortabmanager.h"
+#include <QMessageBox>
 
 EditorTabManager::EditorTabManager(QTabWidget* tabs) : editorTabs(tabs), currentLanguage("C++ (Qt)") {
     connect(editorTabs, &QTabWidget::tabCloseRequested, this, &EditorTabManager::closeTab);
@@ -6,6 +7,17 @@ EditorTabManager::EditorTabManager(QTabWidget* tabs) : editorTabs(tabs), current
     QShortcut* saveShortcut = new QShortcut(QKeySequence::Save, editorTabs);
     saveShortcut->setContext(Qt::WindowShortcut);
     connect(saveShortcut, &QShortcut::activated, this, &EditorTabManager::saveRequested);
+
+    discardConfirmer = [this](const QString& title) {
+        return QMessageBox::question(editorTabs, "Unsaved changes",
+                                     "\"" + title + "\" has unsaved changes. Close it anyway?",
+                                     QMessageBox::Yes | QMessageBox::No,
+                                     QMessageBox::No) == QMessageBox::Yes;
+    };
+}
+
+void EditorTabManager::setDiscardConfirmer(std::function<bool(const QString&)> confirmer) {
+    discardConfirmer = std::move(confirmer);
 }
 
 CodeEditor* EditorTabManager::getCurrentEditor() {
@@ -71,6 +83,7 @@ QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
     file.write(editor->toPlainText().toUtf8());
     if (!file.commit()) return QString();
 
+    editor->document()->setModified(false);
     editor->setFilePath(path);
     return path;
 }
@@ -101,6 +114,10 @@ QString EditorTabManager::uniquePathAmongOpenFiles(const QString& wanted, const 
 
 void EditorTabManager::closeTab(int index) {
     CodeEditor* editor = qobject_cast<CodeEditor*>(editorTabs->widget(index));
+    if (editor && editor->document()->isModified() && discardConfirmer &&
+        !discardConfirmer(editorTabs->tabText(index))) {
+        return;
+    }
     editorTabs->removeTab(index);
     delete editor;
     if (editorTabs->count() == 0) addNewTab("main.cpp");

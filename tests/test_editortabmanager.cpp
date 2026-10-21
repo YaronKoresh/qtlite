@@ -29,6 +29,8 @@ private slots:
     void testTwoUnsavedTabsWithTheSameTitleSaveToDifferentFiles();
     void testUnsavedTabDoesNotTakeThePathOfAnOpenFile();
     void testHighlightingFollowsTheLanguageNotTheFileExtension();
+    void testClosingModifiedTabAsksAndCancelKeepsIt();
+    void testClosingCleanOrSavedTabDoesNotAsk();
 };
 
 void TestEditorTabManager::testSaveUnsavedTabWritesDefaultCppFileToBuildDir()
@@ -205,6 +207,62 @@ void TestEditorTabManager::testHighlightingFollowsTheLanguageNotTheFileExtension
     CodeEditor* cppNamedInPython = manager.addNewTab("program.cpp");
     cppNamedInPython->setPlainText("# a python comment\n");
     QVERIFY(hasFormattedRanges(cppNamedInPython));
+}
+
+void TestEditorTabManager::testClosingModifiedTabAsksAndCancelKeepsIt()
+{
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    QStringList asked;
+    bool answer = false;
+    manager.setDiscardConfirmer([&](const QString& title) {
+        asked << title;
+        return answer;
+    });
+
+    CodeEditor* editor = manager.addNewTab("work.cpp");
+    editor->setPlainText("int x;\n");
+    editor->document()->setModified(true);
+    QCOMPARE(tabs.count(), 1);
+
+    emit tabs.tabCloseRequested(0);
+    QCOMPARE(asked, QStringList() << "work.cpp");
+    QCOMPARE(tabs.count(), 1);
+    QCOMPARE(manager.getCurrentEditor()->toPlainText(), QString("int x;\n"));
+
+    answer = true;
+    emit tabs.tabCloseRequested(0);
+    QCOMPARE(asked.size(), 2);
+    QCOMPARE(tabs.count(), 1);
+    QVERIFY(manager.getCurrentEditor()->toPlainText().isEmpty());
+}
+
+void TestEditorTabManager::testClosingCleanOrSavedTabDoesNotAsk()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QTabWidget tabs;
+    EditorTabManager manager(&tabs);
+    int asked = 0;
+    manager.setDiscardConfirmer([&](const QString&) {
+        ++asked;
+        return false;
+    });
+
+    CodeEditor* first = manager.addNewTab("a.cpp");
+    first->insertPlainText("// a\n");
+    QVERIFY(first->document()->isModified());
+    QVERIFY(!manager.saveCurrentEditor(dir.path()).isEmpty());
+    QVERIFY(!first->document()->isModified());
+
+    manager.addNewTab("clean.cpp");
+    QCOMPARE(tabs.count(), 2);
+
+    emit tabs.tabCloseRequested(1);
+    emit tabs.tabCloseRequested(0);
+
+    QCOMPARE(asked, 0);
+    QCOMPARE(tabs.count(), 1);
 }
 
 QTEST_MAIN(TestEditorTabManager)

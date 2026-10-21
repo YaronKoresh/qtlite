@@ -327,7 +327,7 @@ The left panel shows your project directory:
 ### Tab Management
 
 - **Add Tab**: Create new files
-- **Close Tab**: Click the `×` on any tab
+- **Close Tab**: Click the `×` on any tab (you are asked first if it has unsaved changes)
 - **Reorder Tabs**: Drag tabs to rearrange them
 - **Switch Tabs**: Click to switch between open files
 
