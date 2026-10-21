@@ -47,6 +47,16 @@ QString SnippetManager::getSnippetContent(const QString& name) {
                "    \n"
                "}\n";
     }
+    else if (name == "Python For Loop") {
+        return "for i in range(10):\n"
+               "    pass\n";
+    }
+    else if (name == "Python If/Else") {
+        return "if True:\n"
+               "    pass\n"
+               "else:\n"
+               "    pass\n";
+    }
     else if (name == "If/Else") {
         return "if (true) {\n"
                "    \n"
@@ -66,8 +76,7 @@ QString SnippetManager::getSnippetContent(const QString& name) {
     }
     else if (name == "Python Function") {
         return "def my_function(param1, param2):\n"
-               "    \n"
-               "    return result\n";
+               "    return None\n";
     }
     else if (name == "Python Class") {
         return "class MyClass:\n"
@@ -79,7 +88,7 @@ QString SnippetManager::getSnippetContent(const QString& name) {
     }
     else if (name == "Python Try/Except") {
         return "try:\n"
-               "    \n"
+               "    pass\n"
                "except Exception as e:\n"
                "    print(f\"Error: {e}\")\n";
     }
@@ -119,7 +128,7 @@ void SnippetManager::initializeSnippets() {
     languageSnippets["C/C++ (Console)"] = cCppSnippets;
 
     QStringList pythonSnippets;
-    pythonSnippets << "Python Main" << "For Loop" << "If/Else"
+    pythonSnippets << "Python Main" << "Python For Loop" << "Python If/Else"
                    << "Python Function" << "Python Class" << "Python Try/Except"
                    << "Python List Comprehension" << "Python Dictionary";
     languageSnippets["Python"] = pythonSnippets;

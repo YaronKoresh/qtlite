@@ -227,8 +227,8 @@ QtLite includes a collection of code snippets to speed up your development:
 #### Python
 
 - **Python Main**: Main function pattern with `__name__ == "__main__"`
-- **For Loop**: Python for loop
-- **If/Else**: Python if-else structure
+- **Python For Loop**: Python for loop
+- **Python If/Else**: Python if-else structure
 - **Python Function**: Function definition template
 - **Python Class**: Class definition template
 - **Python Try/Except**: Exception handling block

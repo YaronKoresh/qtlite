@@ -10,6 +10,7 @@ private slots:
     void testGetSnippet();
     void testGetAllLanguages();
     void testGetInvalidSnippet();
+    void testPythonSnippetsArePython();
 };
 
 void TestSnippetManager::testGetSnippetNames()
@@ -67,6 +68,30 @@ void TestSnippetManager::testGetInvalidSnippet()
     
     QString invalid = manager.getSnippet("NonexistentSnippet");
     QVERIFY(invalid.isEmpty());
+}
+
+void TestSnippetManager::testPythonSnippetsArePython()
+{
+    SnippetManager manager;
+
+    const QStringList names = manager.getSnippetNames("Python");
+    QVERIFY(names.contains("Python For Loop"));
+    QVERIFY(names.contains("Python If/Else"));
+    QVERIFY(!names.contains("For Loop"));
+    QVERIFY(!names.contains("If/Else"));
+
+    for (const QString& name : names) {
+        const QString code = manager.getSnippet(name);
+        QVERIFY2(!code.isEmpty(), qPrintable(name));
+        QVERIFY2(!code.contains("for("), qPrintable(name));
+        QVERIFY2(!code.contains("if ("), qPrintable(name));
+        QVERIFY2(!code.contains("} else {"), qPrintable(name));
+        QVERIFY2(!code.contains(';'), qPrintable(name));
+        QVERIFY2(!code.contains("return result"), qPrintable(name));
+    }
+
+    const QString tryExcept = manager.getSnippet("Python Try/Except");
+    QVERIFY(tryExcept.contains("try:\n    pass\nexcept"));
 }
 
 QTEST_MAIN(TestSnippetManager)

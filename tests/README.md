@@ -73,6 +73,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Snippet retrieval
   - Language-specific snippets
   - Snippet content validation
+  - Python snippets contain Python syntax only
 
 - **test_codebundler.cpp** - Tests for CodeBundler class
   - Simple file bundling
