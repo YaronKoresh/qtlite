@@ -112,7 +112,8 @@ void TestCppHighlighter::testStringWithEscapedQuoteIsColoredAsOneString()
 void TestCppHighlighter::testControlFlowAndModernKeywordsAreHighlighted()
 {
     const QStringList words = {"break", "continue", "switch", "case", "default", "do", "try", "catch",
-                               "throw", "using", "nullptr", "constexpr", "noexcept", "override", "final"};
+                               "throw", "using", "nullptr", "constexpr", "noexcept", "override", "final",
+                               "float", "wchar_t", "mutable", "static_assert", "decltype"};
     for (const QString& word : words) {
         bool colored = false;
         for (const QTextLayout::FormatRange& range : formatsOfFirstLine(word + " x;")) {
