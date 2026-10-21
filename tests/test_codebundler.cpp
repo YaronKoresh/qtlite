@@ -18,6 +18,9 @@ private slots:
     void testBundleMissingRootFileFailsAndKeepsPreviousBundle();
     void testBundleKeepsIncludeLineWhenLocalFileIsNotFound();
     void testBundleHandlesSpaceBetweenHashAndInclude();
+    void testBundleKeepsSystemIncludeOutsideConditionalWhenHeaderOnlyIncludesItConditionally();
+    void testBundleKeepsSystemIncludeInBothBranchesOfAConditional();
+    void testBundleStillDeduplicatesSystemIncludesInsideIncludeGuards();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -308,6 +311,53 @@ void TestCodeBundler::testBundleHandlesSpaceBetweenHashAndInclude()
     QVERIFY2(!content.contains("include \"a.h\""), qPrintable(content.left(400)));
     QCOMPARE(content.count("int a();"), 1);
     QCOMPARE(content.count("include <vector>"), 1);
+}
+
+void TestCodeBundler::testBundleKeepsSystemIncludeOutsideConditionalWhenHeaderOnlyIncludesItConditionally()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/a.h", "#ifdef USE_VECTOR\n#include <vector>\n#endif\nint a();\n");
+    writeFile(dir + "/main.cpp",
+              "#include \"a.h\"\n#include <vector>\nint main() { std::vector<int> v; return a(); }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QCOMPARE(content.count("#include <vector>"), 2);
+    QVERIFY2(content.lastIndexOf("#include <vector>") > content.indexOf("#endif"), qPrintable(content));
+}
+
+void TestCodeBundler::testBundleKeepsSystemIncludeInBothBranchesOfAConditional()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/main.cpp",
+              "#ifdef _WIN32\n#include <windows.h>\n#include <cstdio>\n#else\n#include <unistd.h>\n"
+              "#include <cstdio>\n#endif\nint main() { return 0; }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QCOMPARE(content.count("#include <cstdio>"), 2);
+    QCOMPARE(content.count("#include <unistd.h>"), 1);
+}
+
+void TestCodeBundler::testBundleStillDeduplicatesSystemIncludesInsideIncludeGuards()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/a.h", "#ifndef A_H\n#define A_H\n#include <vector>\nint a();\n#endif\n");
+    writeFile(dir + "/b.h", "#ifndef B_H\n#define B_H\n#include <vector>\nint b();\n#endif\n");
+    writeFile(dir + "/main.cpp", "#include \"a.h\"\n#include \"b.h\"\nint main() { return a() + b(); }\n");
+
+    const QString content = bundleToString(dir + "/main.cpp");
+
+    QCOMPARE(content.count("#include <vector>"), 1);
 }
 
 QTEST_MAIN(TestCodeBundler)

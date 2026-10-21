@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QTextStream>
 #include <QSet>
+#include <QStringList>
 #include <QDir>
 #include <QRegularExpression>
 
@@ -22,7 +23,8 @@ public:
 
 private:
     void parseAndBundleFile(const QString& filePath, QTextStream& outStream,
-                            QSet<QString>& processedIncludes, const QString& rootDir);
+                            QSet<QString>& processedIncludes, const QString& rootDir,
+                            const QStringList& activeConditions);
 };
 
 #endif // CODEBUNDLER_H
