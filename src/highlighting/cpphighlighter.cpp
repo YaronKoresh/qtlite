@@ -79,6 +79,20 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
     int blockStart = 0;
     int i = 0;
 
+    if (previousBlockState() == 2) {
+        const QString delimiter = rawDelimiters.value(currentBlock().blockNumber() - 1);
+        const QString closing = ")" + delimiter + "\"";
+        const int end = text.indexOf(closing);
+        if (end == -1) {
+            paintLiteral(0, length, quotationFormat);
+            rawDelimiters[currentBlock().blockNumber()] = delimiter;
+            setCurrentBlockState(2);
+            return;
+        }
+        paintLiteral(0, end + closing.length(), quotationFormat);
+        i = end + closing.length();
+    }
+
     while (i < length) {
         if (inBlock) {
             const int end = text.indexOf(commentEndExpression, i);
@@ -94,6 +108,23 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
             ++i;
             continue;
         }
+        if (c == QLatin1Char('"') && rawStringStart(text, i)) {
+            int open = i + 1;
+            while (open < length && text.at(open) != QLatin1Char('(')) ++open;
+            const QString delimiter = text.mid(i + 1, open - i - 1);
+            const QString closing = ")" + delimiter + "\"";
+            const int end = text.indexOf(closing, open + 1);
+            if (end == -1) {
+                paintLiteral(i - 1, length, quotationFormat);
+                rawDelimiters[currentBlock().blockNumber()] = delimiter;
+                setCurrentBlockState(2);
+                return;
+            }
+            paintLiteral(i - 1, end + closing.length(), quotationFormat);
+            i = end + closing.length();
+            continue;
+        }
+
         if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
             int j = i + 1;
             while (j < length && text.at(j) != c) {
@@ -124,6 +155,26 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
         paintLiteral(blockStart, length, multiLineCommentFormat);
         setCurrentBlockState(1);
     }
+}
+
+bool CppHighlighter::rawStringStart(const QString& text, int quoteIndex) {
+    if (quoteIndex < 1 || text.at(quoteIndex - 1) != QLatin1Char('R')) return false;
+
+    int start = quoteIndex - 1;
+    while (start > 0 && (text.at(start - 1).isLetterOrNumber() || text.at(start - 1) == QLatin1Char('_'))) {
+        --start;
+    }
+    const QString prefix = text.mid(start, quoteIndex - 1 - start);
+    if (!prefix.isEmpty() && prefix != "u8" && prefix != "u" && prefix != "U" && prefix != "L") return false;
+
+    int j = quoteIndex + 1;
+    while (j < text.length() && j - quoteIndex <= 17) {
+        const QChar d = text.at(j);
+        if (d == QLatin1Char('(')) return true;
+        if (d.isSpace() || d == QLatin1Char(')') || d == QLatin1Char('\\') || d == QLatin1Char('"')) return false;
+        ++j;
+    }
+    return false;
 }
 
 bool CppHighlighter::isDigitSeparator(const QString& text, int quoteIndex) {

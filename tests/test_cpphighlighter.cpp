@@ -23,6 +23,9 @@ private slots:
     void testKeywordInsideStringKeepsStringColor();
     void testDigitSeparatorIsNotACharLiteralStart();
     void testHexDigitSeparatorIsNotACharLiteralStart();
+    void testRawStringOnOneLineHidesCommentMarkersAndQuotes();
+    void testRawStringSpansLinesAndEnds();
+    void testRawStringWithDelimiterIgnoresEarlierClosingParen();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -196,6 +199,39 @@ void TestCppHighlighter::testHexDigitSeparatorIsNotACharLiteralStart()
 
     QCOMPARE(colorAt(code, 0, 18), QColor(Qt::gray));
     QCOMPARE(colorAt(code, 0, 26), QColor(Qt::darkBlue));
+}
+
+void TestCppHighlighter::testRawStringOnOneLineHidesCommentMarkersAndQuotes()
+{
+    const QString code = "auto s = R\"(a // b \"c\")\"; // end";
+    // columns: raw string starts at 9, its // is at 14, trailing comment at 26
+
+    QCOMPARE(colorAt(code, 0, 14), QColor(163, 21, 21));
+    QCOMPARE(colorAt(code, 0, 20), QColor(163, 21, 21));
+    QCOMPARE(colorAt(code, 0, 28), QColor(Qt::gray));
+}
+
+void TestCppHighlighter::testRawStringSpansLinesAndEnds()
+{
+    const QString code = "auto s = R\"(\nline /* not a comment\n)\";\nint x;\n";
+
+    const QList<int> states = blockStates(code);
+    QCOMPARE(states.at(0), 2);
+    QCOMPARE(states.at(1), 2);
+    QCOMPARE(states.at(2), 0);
+    QCOMPARE(colorAt(code, 1, 7), QColor(163, 21, 21));
+    QCOMPARE(colorAt(code, 3, 0), QColor(Qt::darkBlue));
+}
+
+void TestCppHighlighter::testRawStringWithDelimiterIgnoresEarlierClosingParen()
+{
+    const QString code = "auto s = R\"x(\nend ) here\n)x\"; int y;\n";
+
+    const QList<int> states = blockStates(code);
+    QCOMPARE(states.at(0), 2);
+    QCOMPARE(states.at(1), 2);
+    QCOMPARE(states.at(2), 0);
+    QCOMPARE(colorAt(code, 2, 6), QColor(Qt::darkBlue));
 }
 
 QTEST_MAIN(TestCppHighlighter)

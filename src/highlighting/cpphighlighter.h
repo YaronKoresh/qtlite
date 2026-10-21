@@ -4,6 +4,7 @@
 #include "syntaxhighlighterbase.h"
 #include <QRegularExpression>
 #include <QTextCharFormat>
+#include <QHash>
 
 class CppHighlighter : public SyntaxHighlighterBase {
     Q_OBJECT
@@ -17,6 +18,7 @@ private:
     QRegularExpression commentStartExpression;
     QRegularExpression commentEndExpression;
     QTextCharFormat multiLineCommentFormat;
+    QHash<int, QString> rawDelimiters;
 
     void initializeCppKeywords();
     void initializeQtClasses();
@@ -26,6 +28,7 @@ private:
     void initializeStrings();
     void highlightMultilineComments(const QString& text);
     void paintLiteral(int start, int end, const QTextCharFormat& format);
+    static bool rawStringStart(const QString& text, int quoteIndex);
     static bool isDigitSeparator(const QString& text, int quoteIndex);
 };
 
