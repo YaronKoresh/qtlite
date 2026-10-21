@@ -46,6 +46,31 @@ void EditorTabManager::insertSnippet(const QString& snippet) {
     }
 }
 
+QString EditorTabManager::saveCurrentEditor(const QString& buildDir) {
+    CodeEditor* editor = getCurrentEditor();
+    if (!editor) return QString();
+
+    QString path = editor->filePath();
+    if (path.isEmpty()) {
+        const bool python = currentLanguage == "Python";
+        const QString title = editorTabs->tabText(editorTabs->indexOf(editor));
+        const QString suffix = QFileInfo(title).suffix().toLower();
+        const bool titleFitsLanguage = python ? suffix == "py" : (suffix == "cpp" || suffix == "c");
+        const QString fileName = titleFitsLanguage ? QFileInfo(title).fileName()
+                                                   : QString(python ? "main.py" : "main.cpp");
+        if (buildDir.isEmpty() || !QDir().mkpath(buildDir)) return QString();
+        path = QDir(buildDir).absoluteFilePath(fileName);
+    }
+
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) return QString();
+    file.write(editor->toPlainText().toUtf8());
+    if (!file.commit()) return QString();
+
+    editor->setFilePath(path);
+    return path;
+}
+
 void EditorTabManager::closeTab(int index) {
     CodeEditor* editor = qobject_cast<CodeEditor*>(editorTabs->widget(index));
     editorTabs->removeTab(index);

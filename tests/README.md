@@ -38,11 +38,12 @@ To build and run all tests, repeat for each test:
 - `TEST=test_settingspersistence`
 - `TEST=test_snippetmanager`
 - `TEST=test_codebundler`
+- `TEST=test_editortabmanager`
 
 Or use a batch script to run all tests:
 ```cmd
 @echo off
-for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test_codebundler) do (
+for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test_codebundler test_editortabmanager) do (
     echo Building %%t...
     C:\Qt\6.10.0\mingw_64\bin\qmake.exe "TEST=%%t" tests.pro
     C:\Qt\Tools\mingw1120_64\bin\mingw32-make.exe clean
@@ -77,6 +78,11 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Local includes resolution
   - System includes handling
   - Circular dependency handling
+
+- **test_editortabmanager.cpp** - Tests for EditorTabManager saving
+  - Saving the current tab before a build
+  - Default file names per language
+  - Failure on unwritable targets
 
 ## Adding New Tests
 

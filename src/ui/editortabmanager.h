@@ -5,6 +5,8 @@
 #include <QTabWidget>
 #include <QFile>
 #include <QFileInfo>
+#include <QDir>
+#include <QSaveFile>
 #include "../editor/codeeditor.h"
 #include "../highlighting/cpphighlighter.h"
 #include "../highlighting/pythonhighlighter.h"
@@ -23,6 +25,7 @@ public:
     void openFile(const QString& filePath);
     void setLanguage(const QString& lang);
     void insertSnippet(const QString& snippet);
+    QString saveCurrentEditor(const QString& buildDir);
 
 private slots:
     void closeTab(int index);

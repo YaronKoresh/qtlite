@@ -406,12 +406,18 @@ void QtLiteApp::runCompilation() {
     CompilerPaths paths = validator.validateAndExtract(settings);
     compilationEngine->setCompilerPaths(paths);
 
+    const QString sourcePath = editorTabManager->saveCurrentEditor(settings.buildDir);
+    if (sourcePath.isEmpty()) {
+        outputLog->append("!!! FAILED to save the current file before building.");
+        return;
+    }
+
     if (settings.language == "C++ (Qt)") {
-        compilationEngine->compileQt(buildDirEdit->text() + "/main.cpp");
+        compilationEngine->compileQt(sourcePath);
     } else if (settings.language == "C/C++ (Console)") {
-        compilationEngine->compileConsole(buildDirEdit->text() + "/main.cpp");
+        compilationEngine->compileConsole(sourcePath);
     } else if (settings.language == "Python") {
-        compilationEngine->compilePython(buildDirEdit->text() + "/main.py");
+        compilationEngine->compilePython(sourcePath);
     }
 }
 

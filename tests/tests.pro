@@ -40,3 +40,20 @@ equals(TEST, test_codebundler) {
     SOURCES += ../src/core/codebundler.cpp
     HEADERS += ../src/core/codebundler.h
 }
+
+equals(TEST, test_editortabmanager) {
+    TARGET = test_editortabmanager
+    QT += widgets
+    SOURCES += test_editortabmanager.cpp
+    SOURCES += ../src/ui/editortabmanager.cpp
+    SOURCES += ../src/editor/codeeditor.cpp
+    SOURCES += ../src/editor/linenumberarea.cpp
+    SOURCES += ../src/highlighting/cpphighlighter.cpp
+    SOURCES += ../src/highlighting/pythonhighlighter.cpp
+    HEADERS += ../src/ui/editortabmanager.h
+    HEADERS += ../src/editor/codeeditor.h
+    HEADERS += ../src/editor/linenumberarea.h
+    HEADERS += ../src/highlighting/syntaxhighlighterbase.h
+    HEADERS += ../src/highlighting/cpphighlighter.h
+    HEADERS += ../src/highlighting/pythonhighlighter.h
+}
