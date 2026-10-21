@@ -21,6 +21,8 @@ private slots:
     void testModuleDetectionFromClassAndUmbrellaIncludes();
     void testModuleDetectionIgnoresCoreHeaders();
     void testModuleDetectionKeepsSlashForm();
+    void testBuildOutputWithPlainTextErrorCIsNotAFailure();
+    void testBuildOutputWithCompilerErrorCodeIsAFailure();
 };
 
 void TestCompilationEngine::testCompileQtMissingFileIsReported()
@@ -114,6 +116,70 @@ void TestCompilationEngine::testModuleDetectionKeepsSlashForm()
 {
     QCOMPARE(proQtLine("#include <QtNetwork/QTcpSocket>\n#include <QtWidgets/QApplication>\nint main(){}\n"),
              QString("QT += network widgets"));
+}
+
+#ifndef Q_OS_WIN
+static QString runConsoleBuildWithFakeShell(const QByteArray& shellOutput)
+{
+    QTemporaryDir dir;
+    if (!dir.isValid())
+        return QString();
+    const QString fake = dir.path() + "/powershell.exe";
+    QFile script(fake);
+    if (!script.open(QIODevice::WriteOnly))
+        return QString();
+    script.write("#!/bin/sh\necho '" + shellOutput + "'\nexit 0\n");
+    script.close();
+    QFile::setPermissions(fake, QFileDevice::ReadOwner | QFileDevice::WriteOwner | QFileDevice::ExeOwner);
+
+    const QByteArray oldPath = qgetenv("PATH");
+    qputenv("PATH", dir.path().toUtf8() + ":" + oldPath);
+
+    QTextEdit log;
+    CompilationEngine engine(&log);
+    ProjectSettings settings;
+    settings.buildDir = dir.path() + "/build";
+    settings.buildConfig = "Release";
+    settings.bundleToExe = false;
+    CompilerPaths paths;
+    paths.vcvarsPath = "vcvarsall.bat";
+    engine.setProjectSettings(settings);
+    engine.setCompilerPaths(paths);
+    engine.compileConsole(dir.path() + "/main.cpp");
+
+    QElapsedTimer timer;
+    timer.start();
+    while (timer.elapsed() < 10000 && !log.toPlainText().contains("Build")) {
+        QTest::qWait(20);
+    }
+    while (timer.elapsed() < 10000 && !log.toPlainText().contains("Build FAILED") &&
+           !log.toPlainText().contains("Build Succeeded")) {
+        QTest::qWait(20);
+    }
+    qputenv("PATH", oldPath);
+    return log.toPlainText();
+}
+#endif
+
+void TestCompilationEngine::testBuildOutputWithPlainTextErrorCIsNotAFailure()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Uses a fake POSIX shell script as powershell.exe");
+#else
+    const QString text = runConsoleBuildWithFakeShell("compiled, no error Code and no error Check");
+    QVERIFY2(text.contains("Build Succeeded"), qPrintable(text));
+    QVERIFY2(!text.contains("Build FAILED"), qPrintable(text));
+#endif
+}
+
+void TestCompilationEngine::testBuildOutputWithCompilerErrorCodeIsAFailure()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Uses a fake POSIX shell script as powershell.exe");
+#else
+    const QString text = runConsoleBuildWithFakeShell("main.cpp(3): error C2065: x: undeclared identifier");
+    QVERIFY2(text.contains("Build FAILED"), qPrintable(text));
+#endif
 }
 
 QTEST_MAIN(TestCompilationEngine)

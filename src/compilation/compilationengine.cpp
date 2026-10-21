@@ -253,7 +253,7 @@ void CompilationEngine::handleBuildCompletion(int exitCode, QProcess::ExitStatus
     bool buildFailed = exitStatus == QProcess::CrashExit || exitCode != 0 ||
                        logText.contains("NMAKE : fatal error", Qt::CaseInsensitive) ||
                        logText.contains("LINK : fatal error", Qt::CaseInsensitive) ||
-                       logText.contains("error C", Qt::CaseInsensitive);
+                       logText.contains(QRegularExpression("error C\\d+", QRegularExpression::CaseInsensitiveOption));
 
     if (buildFailed) {
         outputLog->append("\n!!! Build FAILED !!!");

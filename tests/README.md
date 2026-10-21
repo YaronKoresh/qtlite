@@ -89,6 +89,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Missing source file
   - Empty source file
   - Qt module detection for the generated .pro file
+  - Build success and failure detection from the build output
 
 ## Adding New Tests
 
