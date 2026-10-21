@@ -34,7 +34,7 @@ void PythonHighlighter::initializePythonKeywords() {
 void PythonHighlighter::initializeBuiltins() {
     QTextCharFormat builtInFormat;
     builtInFormat.setForeground(QColor(0, 100, 100));
-    addHighlightingRule("\\b(True|False|None|self|print|len|str|int|float|list|dict|set|tuple|bool|range|open|input|super|cls|enumerate|zip|sorted|isinstance|sum|min|max|abs)\\b", builtInFormat);
+    addHighlightingRule("\\b(True|False|None|self|print|len|str|int|float|list|dict|set|tuple|bool|range|open|input|super|cls|enumerate|zip|sorted|isinstance|sum|min|max|abs|map|filter|type|any|all|reversed|round|repr|bytes|id|ord|chr|getattr|setattr|hasattr|callable|iter|next|format|pow|divmod|object|hex|bin|frozenset|Exception|[A-Z][A-Za-z]*Error|__name__)\\b", builtInFormat);
 }
 
 void PythonHighlighter::initializeDecorators() {

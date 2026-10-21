@@ -17,6 +17,7 @@ private slots:
     void testStringsWithEscapedQuotesAreColoredAsOneString();
     void testAssertDelAsyncAwaitAreKeywords();
     void testCommonBuiltinsAreHighlighted();
+    void testMoreBuiltinsAreHighlighted();
     void testCodeAfterStringWithHashIsNotComment();
     void testQuotesInsideCommentAreNotStrings();
     void testTripleQuoteInsideCommentDoesNotOpenString();
@@ -214,6 +215,28 @@ void TestPythonHighlighter::testEscapedQuoteBeforeClosingTripleQuoteOnLaterLine(
     QCOMPARE(states.at(0), 1);
     QCOMPARE(states.at(1), 0);
     QCOMPARE(states.at(2), 0);
+}
+
+void TestPythonHighlighter::testMoreBuiltinsAreHighlighted()
+{
+    const QStringList words = {"map", "filter", "type", "any", "all", "reversed", "round", "repr",
+                               "bytes", "id", "ord", "chr", "getattr", "setattr", "hasattr", "callable",
+                               "iter", "next", "format", "pow", "divmod", "object", "hex", "bin",
+                               "frozenset", "Exception", "ValueError", "__name__"};
+    for (const QString& word : words) {
+        QTextDocument doc;
+        doc.setPlainText(word + "(x)");
+        PythonHighlighter highlighter(&doc);
+        highlighter.rehighlight();
+
+        bool colored = false;
+        for (const QTextLayout::FormatRange& range : doc.firstBlock().layout()->formats()) {
+            if (range.start == 0 && range.length == word.length() &&
+                range.format.foreground().color() == QColor(0, 100, 100))
+                colored = true;
+        }
+        QVERIFY2(colored, qPrintable(word));
+    }
 }
 
 QTEST_MAIN(TestPythonHighlighter)
