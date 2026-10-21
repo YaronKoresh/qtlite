@@ -74,3 +74,12 @@ equals(TEST, test_pythonhighlighter) {
     HEADERS += ../src/highlighting/pythonhighlighter.h
     HEADERS += ../src/highlighting/syntaxhighlighterbase.h
 }
+
+equals(TEST, test_cpphighlighter) {
+    TARGET = test_cpphighlighter
+    QT += widgets
+    SOURCES += test_cpphighlighter.cpp
+    SOURCES += ../src/highlighting/cpphighlighter.cpp
+    HEADERS += ../src/highlighting/cpphighlighter.h
+    HEADERS += ../src/highlighting/syntaxhighlighterbase.h
+}

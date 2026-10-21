@@ -41,11 +41,12 @@ To build and run all tests, repeat for each test:
 - `TEST=test_editortabmanager`
 - `TEST=test_compilationengine`
 - `TEST=test_pythonhighlighter`
+- `TEST=test_cpphighlighter`
 
 Or use a batch script to run all tests:
 ```cmd
 @echo off
-for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test_codebundler test_editortabmanager test_compilationengine test_pythonhighlighter) do (
+for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test_codebundler test_editortabmanager test_compilationengine test_pythonhighlighter test_cpphighlighter) do (
     echo Building %%t...
     C:\Qt\6.10.0\mingw_64\bin\qmake.exe "TEST=%%t" tests.pro
     C:\Qt\Tools\mingw1120_64\bin\mingw32-make.exe clean
@@ -91,6 +92,9 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter
   - Mixed delimiters do not close each other
+
+- **test_cpphighlighter.cpp** - Tests for CppHighlighter block comment state
+  - A comment start inside a line comment or string does not open a block
 
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting
   - A second run while a process is running is rejected

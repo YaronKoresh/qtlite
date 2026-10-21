@@ -71,22 +71,47 @@ void CppHighlighter::initializeStrings() {
 
 void CppHighlighter::highlightMultilineComments(const QString& text) {
     setCurrentBlockState(0);
-    int startIndex = 0;
-    if (previousBlockState() != 1) startIndex = text.indexOf(commentStartExpression);
 
-    while (startIndex >= 0) {
-        QRegularExpressionMatch match = commentEndExpression.match(text, startIndex);
-        int endIndex = match.capturedStart();
-        int commentLength;
+    const int length = text.length();
+    bool inBlock = (previousBlockState() == 1);
+    int blockStart = 0;
+    int i = 0;
 
-        if (endIndex == -1) {
-            setCurrentBlockState(1);
-            commentLength = text.length() - startIndex;
-        } else {
-            commentLength = endIndex - startIndex + match.capturedLength();
+    while (i < length) {
+        if (inBlock) {
+            const int end = text.indexOf(commentEndExpression, i);
+            if (end == -1) break;
+            setFormat(blockStart, end + 2 - blockStart, multiLineCommentFormat);
+            inBlock = false;
+            i = end + 2;
+            continue;
         }
 
-        setFormat(startIndex, commentLength, multiLineCommentFormat);
-        startIndex = text.indexOf(commentStartExpression, startIndex + commentLength);
+        const QChar c = text.at(i);
+        if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
+            int j = i + 1;
+            while (j < length && text.at(j) != c) {
+                if (text.at(j) == QLatin1Char('\\')) ++j;
+                ++j;
+            }
+            i = j + 1;
+            continue;
+        }
+
+        if (c == QLatin1Char('/') && i + 1 < length) {
+            if (text.at(i + 1) == QLatin1Char('/')) return;
+            if (text.at(i + 1) == QLatin1Char('*')) {
+                inBlock = true;
+                blockStart = i;
+                i += 2;
+                continue;
+            }
+        }
+        ++i;
+    }
+
+    if (inBlock) {
+        setFormat(blockStart, length - blockStart, multiLineCommentFormat);
+        setCurrentBlockState(1);
     }
 }
