@@ -1,6 +1,15 @@
 #include "compilationengine.h"
 #include <QTextStream>
 
+static QStringList splitPathList(const QString& text) {
+    QStringList result;
+    for (const QString& part : text.split(';')) {
+        const QString trimmed = part.trimmed();
+        if (!trimmed.isEmpty()) result << trimmed;
+    }
+    return result;
+}
+
 CompilationEngine::CompilationEngine(QTextEdit* log) : currentProcess(nullptr), outputLog(log) {}
 
 void CompilationEngine::setCompilerPaths(const CompilerPaths& paths) {
@@ -71,7 +80,7 @@ void CompilationEngine::compileConsole(const QString& filePath) {
     clArgs << "/analyze";
 
     if (!projectSettings.includeDirs.isEmpty()) {
-        for (const QString& path : projectSettings.includeDirs.split(';', Qt::SkipEmptyParts)) {
+        for (const QString& path : splitPathList(projectSettings.includeDirs)) {
             clArgs << "/I\"" + QDir::fromNativeSeparators(path) + "\"";
         }
     }
@@ -84,7 +93,7 @@ void CompilationEngine::compileConsole(const QString& filePath) {
     clArgs << "\"" + QDir::fromNativeSeparators(filePath) + "\"";
 
     if (!projectSettings.libDirs.isEmpty()) {
-        for (const QString& path : projectSettings.libDirs.split(';', Qt::SkipEmptyParts)) {
+        for (const QString& path : splitPathList(projectSettings.libDirs)) {
             QString nativePath = QDir::fromNativeSeparators(path);
             if (nativePath.endsWith(".lib", Qt::CaseInsensitive)) {
                 clArgs << "\"" + nativePath + "\"";
@@ -219,13 +228,13 @@ QString CompilationEngine::generateProFile(const QString& code) {
     }
 
     if (!projectSettings.includeDirs.isEmpty()) {
-        for (const QString& path : projectSettings.includeDirs.split(';', Qt::SkipEmptyParts)) {
+        for (const QString& path : splitPathList(projectSettings.includeDirs)) {
             proContent += "INCLUDEPATH += \"" + QDir::fromNativeSeparators(path) + "\"\n";
         }
     }
 
     if (!projectSettings.libDirs.isEmpty()) {
-        for (const QString& path : projectSettings.libDirs.split(';', Qt::SkipEmptyParts)) {
+        for (const QString& path : splitPathList(projectSettings.libDirs)) {
             QString nativePath = QDir::fromNativeSeparators(path);
             if (nativePath.endsWith(".lib", Qt::CaseInsensitive)) {
                 proContent += "LIBS += \"" + nativePath + "\"\n";

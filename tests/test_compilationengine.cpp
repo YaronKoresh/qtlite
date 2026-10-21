@@ -24,6 +24,7 @@ private slots:
     void testBuildOutputWithPlainTextErrorCIsNotAFailure();
     void testBuildOutputWithCompilerErrorCodeIsAFailure();
     void testSecondRunWhileRunningIsRejectedWithoutCrash();
+    void testPathListsAreTrimmedInTheProFile();
     void testFailedProcessStartIsReportedAndEngineIsFreeAgain();
 };
 
@@ -275,6 +276,34 @@ void TestCompilationEngine::testFailedProcessStartIsReportedAndEngineIsFreeAgain
     QVERIFY2(waitForLog(log, "Script finished", 10000), qPrintable(log.toPlainText()));
     QVERIFY(log.toPlainText().contains("ok-ran"));
 #endif
+}
+
+void TestCompilationEngine::testPathListsAreTrimmedInTheProFile()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    writeFile(dir.path() + "/src.cpp", "int main(){}\n");
+
+    QTextEdit log;
+    CompilationEngine engine(&log);
+    ProjectSettings settings;
+    settings.buildDir = dir.path() + "/build";
+    settings.buildConfig = "Release";
+    settings.includeDirs = "C:/one;  C:/two with space ; ;C:/three ";
+    settings.libDirs = " C:/libs/mylib.lib ;  C:/other/thing";
+    engine.setProjectSettings(settings);
+    engine.compileQt(dir.path() + "/src.cpp");
+
+    QFile pro(dir.path() + "/build/temp_app.pro");
+    QVERIFY(pro.open(QIODevice::ReadOnly));
+    const QString text = QString::fromUtf8(pro.readAll());
+
+    QVERIFY2(text.contains("INCLUDEPATH += \"C:/one\"\n"), qPrintable(text));
+    QVERIFY2(text.contains("INCLUDEPATH += \"C:/two with space\"\n"), qPrintable(text));
+    QVERIFY2(text.contains("INCLUDEPATH += \"C:/three\"\n"), qPrintable(text));
+    QCOMPARE(text.count("INCLUDEPATH +="), 3);
+    QVERIFY2(text.contains("LIBS += \"C:/libs/mylib.lib\"\n"), qPrintable(text));
+    QVERIFY2(text.contains("LIBS += C:/other/thing\n"), qPrintable(text));
 }
 
 QTEST_MAIN(TestCompilationEngine)
