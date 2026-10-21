@@ -90,6 +90,10 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
         }
 
         const QChar c = text.at(i);
+        if (c == QLatin1Char('\'') && isDigitSeparator(text, i)) {
+            ++i;
+            continue;
+        }
         if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
             int j = i + 1;
             while (j < length && text.at(j) != c) {
@@ -120,6 +124,16 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
         paintLiteral(blockStart, length, multiLineCommentFormat);
         setCurrentBlockState(1);
     }
+}
+
+bool CppHighlighter::isDigitSeparator(const QString& text, int quoteIndex) {
+    int start = quoteIndex;
+    while (start > 0 && (text.at(start - 1).isLetterOrNumber() || text.at(start - 1) == QLatin1Char('_')
+                         || text.at(start - 1) == QLatin1Char('\''))) {
+        --start;
+    }
+    return start < quoteIndex && text.at(start).isDigit() &&
+           text.at(quoteIndex - 1) != QLatin1Char('\'');
 }
 
 void CppHighlighter::paintLiteral(int start, int end, const QTextCharFormat& format) {

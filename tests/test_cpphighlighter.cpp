@@ -21,6 +21,8 @@ private slots:
     void testQuotesInsideLineCommentAreNotStrings();
     void testQuotesInsideBlockCommentAreNotStrings();
     void testKeywordInsideStringKeepsStringColor();
+    void testDigitSeparatorIsNotACharLiteralStart();
+    void testHexDigitSeparatorIsNotACharLiteralStart();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -178,6 +180,22 @@ void TestCppHighlighter::testKeywordInsideStringKeepsStringColor()
 
     QCOMPARE(colorAt(code, 0, 11), QColor(163, 21, 21));
     QCOMPARE(colorAt(code, 0, 15), QColor(163, 21, 21));
+}
+
+void TestCppHighlighter::testDigitSeparatorIsNotACharLiteralStart()
+{
+    const QString code = "int n = 1'000; // it's";
+
+    QCOMPARE(colorAt(code, 0, 15), QColor(Qt::gray));
+    QCOMPARE(colorAt(code, 0, 21), QColor(Qt::gray));
+}
+
+void TestCppHighlighter::testHexDigitSeparatorIsNotACharLiteralStart()
+{
+    const QString code = "auto m = 0xFF'FF; /* a */ int z;";
+
+    QCOMPARE(colorAt(code, 0, 18), QColor(Qt::gray));
+    QCOMPARE(colorAt(code, 0, 26), QColor(Qt::darkBlue));
 }
 
 QTEST_MAIN(TestCppHighlighter)

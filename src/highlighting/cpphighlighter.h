@@ -26,6 +26,7 @@ private:
     void initializeStrings();
     void highlightMultilineComments(const QString& text);
     void paintLiteral(int start, int end, const QTextCharFormat& format);
+    static bool isDigitSeparator(const QString& text, int quoteIndex);
 };
 
 #endif // CPPHIGHLIGHTER_H
