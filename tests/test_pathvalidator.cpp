@@ -1,4 +1,6 @@
 #include <QtTest>
+#include <QTemporaryDir>
+#include <QFile>
 #include "../src/core/pathvalidator.h"
 #include "../src/core/projectstructs.h"
 
@@ -12,6 +14,8 @@ private slots:
     void testValidateVsPaths();
     void testValidatePythonPath();
     void testGetValidationColor();
+    void testDirectoryIsNotAcceptedAsToolFile();
+    void testExistingFilesAreAccepted();
 };
 
 void TestPathValidator::testValidateAndExtract()
@@ -74,6 +78,49 @@ void TestPathValidator::testGetValidationColor()
     
     QCOMPARE(validColor, Qt::white);
     QCOMPARE(invalidColor, QColor(255, 220, 220));
+}
+
+void TestPathValidator::testDirectoryIsNotAcceptedAsToolFile()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    PathValidator validator;
+    CompilerPaths paths;
+    paths.qmakePath = dir;
+    paths.windeployqtPath = dir;
+    paths.vcvarsPath = dir;
+    paths.pythonExePath = dir;
+
+    QVERIFY(!validator.validateQtPaths(paths));
+    QVERIFY(!validator.validateVsPaths(paths));
+    QVERIFY(!validator.validatePythonPath(paths));
+}
+
+void TestPathValidator::testExistingFilesAreAccepted()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    const QStringList names = {"qmake.exe", "windeployqt.exe", "vcvarsall.bat", "python.exe"};
+    for (const QString& name : names) {
+        QFile f(dir + "/" + name);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.close();
+    }
+
+    PathValidator validator;
+    CompilerPaths paths;
+    paths.qmakePath = dir + "/qmake.exe";
+    paths.windeployqtPath = dir + "/windeployqt.exe";
+    paths.vcvarsPath = dir + "/vcvarsall.bat";
+    paths.pythonExePath = dir + "/python.exe";
+
+    QVERIFY(validator.validateQtPaths(paths));
+    QVERIFY(validator.validateVsPaths(paths));
+    QVERIFY(validator.validatePythonPath(paths));
 }
 
 QTEST_MAIN(TestPathValidator)

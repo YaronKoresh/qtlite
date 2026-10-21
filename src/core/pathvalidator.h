@@ -28,15 +28,15 @@ public:
     }
 
     bool validateQtPaths(const CompilerPaths& paths) const {
-        return QFile::exists(paths.qmakePath) && QFile::exists(paths.windeployqtPath);
+        return QFileInfo(paths.qmakePath).isFile() && QFileInfo(paths.windeployqtPath).isFile();
     }
 
     bool validateVsPaths(const CompilerPaths& paths) const {
-        return QFile::exists(paths.vcvarsPath);
+        return QFileInfo(paths.vcvarsPath).isFile();
     }
 
     bool validatePythonPath(const CompilerPaths& paths) const {
-        return QFile::exists(paths.pythonExePath);
+        return QFileInfo(paths.pythonExePath).isFile();
     }
 
     QColor getValidationColor(bool isValid) const {
