@@ -17,6 +17,10 @@ private slots:
     void testSlashStarSlashDoesNotCloseItself();
     void testStringWithEscapedQuoteIsColoredAsOneString();
     void testControlFlowAndModernKeywordsAreHighlighted();
+    void testCodeAfterStringWithLineCommentMarkerIsNotComment();
+    void testQuotesInsideLineCommentAreNotStrings();
+    void testQuotesInsideBlockCommentAreNotStrings();
+    void testKeywordInsideStringKeepsStringColor();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -30,6 +34,24 @@ static QList<int> blockStates(const QString& code)
     for (QTextBlock block = doc.begin(); block.isValid(); block = block.next())
         states << block.userState();
     return states;
+}
+
+static QColor colorAt(const QString& code, int line, int column)
+{
+    QTextDocument doc;
+    doc.setPlainText(code);
+    CppHighlighter highlighter(&doc);
+    highlighter.rehighlight();
+
+    QTextBlock block = doc.findBlockByNumber(line);
+    const QVector<QTextLayout::FormatRange> ranges = block.layout()->formats();
+    QColor color;
+    for (const QTextLayout::FormatRange& range : ranges) {
+        if (column >= range.start && column < range.start + range.length &&
+            range.format.hasProperty(QTextFormat::ForegroundBrush))
+            color = range.format.foreground().color();
+    }
+    return color;
 }
 
 void TestCppHighlighter::testBlockCommentSpansLinesAndEnds()
@@ -123,6 +145,39 @@ void TestCppHighlighter::testControlFlowAndModernKeywordsAreHighlighted()
         }
         QVERIFY2(colored, qPrintable(word));
     }
+}
+
+void TestCppHighlighter::testCodeAfterStringWithLineCommentMarkerIsNotComment()
+{
+    const QString code = "puts(\"a//b\"); int x; // note";
+
+    QCOMPARE(colorAt(code, 0, 7), QColor(163, 21, 21));
+    QCOMPARE(colorAt(code, 0, 14), QColor(Qt::darkBlue));
+    QCOMPARE(colorAt(code, 0, 23), QColor(Qt::gray));
+}
+
+void TestCppHighlighter::testQuotesInsideLineCommentAreNotStrings()
+{
+    const QString code = "int a; // say \"hi\"";
+
+    QCOMPARE(colorAt(code, 0, 16), QColor(Qt::gray));
+    QCOMPARE(colorAt(code, 0, 17), QColor(Qt::gray));
+}
+
+void TestCppHighlighter::testQuotesInsideBlockCommentAreNotStrings()
+{
+    const QString code = "/* \"q\" */ int z;";
+
+    QCOMPARE(colorAt(code, 0, 4), QColor(Qt::gray));
+    QCOMPARE(colorAt(code, 0, 11), QColor(Qt::darkBlue));
+}
+
+void TestCppHighlighter::testKeywordInsideStringKeepsStringColor()
+{
+    const QString code = "auto s = \"for if\";";
+
+    QCOMPARE(colorAt(code, 0, 11), QColor(163, 21, 21));
+    QCOMPARE(colorAt(code, 0, 15), QColor(163, 21, 21));
 }
 
 QTEST_MAIN(TestCppHighlighter)

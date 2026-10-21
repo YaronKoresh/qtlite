@@ -45,55 +45,74 @@ void PythonHighlighter::initializeDecorators() {
 
 void PythonHighlighter::initializeComments() {
     setCommentFormat(Qt::gray);
-    addHighlightingRule("#[^\n]*", commentFormat);
 }
 
 void PythonHighlighter::initializeStrings() {
     setQuotationFormat(QColor(163, 21, 21));
-    addHighlightingRule("\"(?:[^\"\\\\\n]|\\\\.)*\"", quotationFormat);
-    addHighlightingRule("'(?:[^'\\\\\n]|\\\\.)*'", quotationFormat);
 }
 
 void PythonHighlighter::initializeMultilineStrings() {
     multiLineStringFormat.setForeground(QColor(163, 21, 21));
-    multiLineStringStartExpression = QRegularExpression("(\"\"\"|\'\'\')");
 }
+
 
 void PythonHighlighter::highlightMultilineStrings(const QString& text) {
     setCurrentBlockState(0);
 
+    const int length = text.length();
     const int previous = previousBlockState();
-    const bool continuing = (previous == 1 || previous == 2);
-    int startIndex = 0;
-    QString delimiter;
-    bool insideFromPreviousLine = continuing;
+    int i = 0;
 
-    if (continuing) {
-        delimiter = (previous == 1) ? QStringLiteral("\"\"\"") : QStringLiteral("\'\'\'");
-    } else {
-        QRegularExpressionMatch start = multiLineStringStartExpression.match(text);
-        startIndex = start.hasMatch() ? start.capturedStart() : -1;
-        if (start.hasMatch()) delimiter = start.captured(1);
+    if (previous == 1 || previous == 2) {
+        const QString delimiter = (previous == 1) ? QStringLiteral("\"\"\"") : QStringLiteral("\'\'\'");
+        const int endIndex = text.indexOf(delimiter, 0);
+        const int stringEnd = (endIndex == -1) ? length : endIndex + 3;
+        paintLiteral(0, stringEnd, multiLineStringFormat);
+        if (endIndex == -1) {
+            setCurrentBlockState(previous);
+            return;
+        }
+        i = stringEnd;
     }
 
-    while (startIndex >= 0) {
-        const int searchFrom = insideFromPreviousLine ? startIndex : startIndex + delimiter.length();
-        const int endIndex = text.indexOf(delimiter, searchFrom);
-        int stringLength;
+    while (i < length) {
+        const QChar c = text.at(i);
 
-        if (endIndex == -1) {
-            setCurrentBlockState(delimiter == QLatin1String("\"\"\"") ? 1 : 2);
-            stringLength = text.length() - startIndex;
-        } else {
-            stringLength = endIndex - startIndex + delimiter.length();
+        if (c == QLatin1Char('#')) {
+            paintLiteral(i, length, commentFormat);
+            return;
         }
 
-        setFormat(startIndex, stringLength, multiLineStringFormat);
-        insideFromPreviousLine = false;
+        if (c == QLatin1Char('"') || c == QLatin1Char('\'')) {
+            const QString triple = QString(3, c);
+            if (text.mid(i, 3) == triple) {
+                const int endIndex = text.indexOf(triple, i + 3);
+                const int stringEnd = (endIndex == -1) ? length : endIndex + 3;
+                paintLiteral(i, stringEnd, multiLineStringFormat);
+                if (endIndex == -1) {
+                    setCurrentBlockState(c == QLatin1Char('"') ? 1 : 2);
+                    return;
+                }
+                i = stringEnd;
+                continue;
+            }
 
-        QRegularExpressionMatch next = multiLineStringStartExpression.match(text, startIndex + stringLength);
-        if (!next.hasMatch()) break;
-        startIndex = next.capturedStart();
-        delimiter = next.captured(1);
+            int j = i + 1;
+            while (j < length && text.at(j) != c) {
+                if (text.at(j) == QLatin1Char('\\')) ++j;
+                ++j;
+            }
+            const int stringEnd = qMin(j + 1, length);
+            paintLiteral(i, stringEnd, quotationFormat);
+            i = stringEnd;
+            continue;
+        }
+
+        ++i;
     }
+}
+
+void PythonHighlighter::paintLiteral(int start, int end, const QTextCharFormat& format) {
+    setFormat(start, end - start, QTextCharFormat());
+    setFormat(start, end - start, format);
 }

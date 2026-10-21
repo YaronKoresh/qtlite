@@ -25,6 +25,7 @@ private:
     void initializeComments();
     void initializeStrings();
     void highlightMultilineComments(const QString& text);
+    void paintLiteral(int start, int end, const QTextCharFormat& format);
 };
 
 #endif // CPPHIGHLIGHTER_H

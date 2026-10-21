@@ -61,7 +61,6 @@ void CppHighlighter::initializePreprocessor() {
 
 void CppHighlighter::initializeComments() {
     setCommentFormat(Qt::gray);
-    addHighlightingRule("//[^\n]*", commentFormat);
 
     multiLineCommentFormat.setForeground(Qt::gray);
     commentStartExpression = QRegularExpression("/\\*");
@@ -70,7 +69,6 @@ void CppHighlighter::initializeComments() {
 
 void CppHighlighter::initializeStrings() {
     setQuotationFormat(QColor(163, 21, 21));
-    addHighlightingRule("\"(?:[^\"\\\\\n]|\\\\.)*\"", quotationFormat);
 }
 
 void CppHighlighter::highlightMultilineComments(const QString& text) {
@@ -85,7 +83,7 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
         if (inBlock) {
             const int end = text.indexOf(commentEndExpression, i);
             if (end == -1) break;
-            setFormat(blockStart, end + 2 - blockStart, multiLineCommentFormat);
+            paintLiteral(blockStart, end + 2, multiLineCommentFormat);
             inBlock = false;
             i = end + 2;
             continue;
@@ -98,12 +96,16 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
                 if (text.at(j) == QLatin1Char('\\')) ++j;
                 ++j;
             }
+            if (c == QLatin1Char('"')) paintLiteral(i, qMin(j + 1, length), quotationFormat);
             i = j + 1;
             continue;
         }
 
         if (c == QLatin1Char('/') && i + 1 < length) {
-            if (text.at(i + 1) == QLatin1Char('/')) return;
+            if (text.at(i + 1) == QLatin1Char('/')) {
+                paintLiteral(i, length, commentFormat);
+                return;
+            }
             if (text.at(i + 1) == QLatin1Char('*')) {
                 inBlock = true;
                 blockStart = i;
@@ -115,7 +117,12 @@ void CppHighlighter::highlightMultilineComments(const QString& text) {
     }
 
     if (inBlock) {
-        setFormat(blockStart, length - blockStart, multiLineCommentFormat);
+        paintLiteral(blockStart, length, multiLineCommentFormat);
         setCurrentBlockState(1);
     }
+}
+
+void CppHighlighter::paintLiteral(int start, int end, const QTextCharFormat& format) {
+    setFormat(start, end - start, QTextCharFormat());
+    setFormat(start, end - start, format);
 }

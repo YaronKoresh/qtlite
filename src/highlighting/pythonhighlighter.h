@@ -14,7 +14,6 @@ protected:
     void highlightBlock(const QString& text) override;
 
 private:
-    QRegularExpression multiLineStringStartExpression;
     QTextCharFormat multiLineStringFormat;
 
     void initializePythonKeywords();
@@ -24,6 +23,7 @@ private:
     void initializeStrings();
     void initializeMultilineStrings();
     void highlightMultilineStrings(const QString& text);
+    void paintLiteral(int start, int end, const QTextCharFormat& format);
 };
 
 #endif // PYTHONHIGHLIGHTER_H
