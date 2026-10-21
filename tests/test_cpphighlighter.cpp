@@ -21,6 +21,7 @@ private slots:
     void testQuotesInsideLineCommentAreNotStrings();
     void testQuotesInsideBlockCommentAreNotStrings();
     void testKeywordInsideStringKeepsStringColor();
+    void testCastsAndLaterStandardKeywordsAreHighlighted();
     void testDigitSeparatorIsNotACharLiteralStart();
     void testHexDigitSeparatorIsNotACharLiteralStart();
     void testRawStringOnOneLineHidesCommentMarkersAndQuotes();
@@ -183,6 +184,23 @@ void TestCppHighlighter::testKeywordInsideStringKeepsStringColor()
 
     QCOMPARE(colorAt(code, 0, 11), QColor(163, 21, 21));
     QCOMPARE(colorAt(code, 0, 15), QColor(163, 21, 21));
+}
+
+void TestCppHighlighter::testCastsAndLaterStandardKeywordsAreHighlighted()
+{
+    const QStringList words = {"static_cast", "dynamic_cast", "const_cast", "reinterpret_cast",
+                               "typeid", "alignas", "alignof", "thread_local", "char8_t", "char16_t",
+                               "char32_t", "concept", "requires", "consteval", "constinit", "co_await",
+                               "co_return", "co_yield", "export", "asm", "foreach", "emit"};
+    for (const QString& word : words) {
+        bool colored = false;
+        for (const QTextLayout::FormatRange& range : formatsOfFirstLine(word + " x;")) {
+            if (range.start == 0 && range.length == word.length() &&
+                range.format.foreground().color() == QColor(Qt::darkBlue))
+                colored = true;
+        }
+        QVERIFY2(colored, qPrintable(word));
+    }
 }
 
 void TestCppHighlighter::testDigitSeparatorIsNotACharLiteralStart()
