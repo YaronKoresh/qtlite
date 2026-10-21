@@ -444,7 +444,7 @@ void QtLiteApp::bundleCode() {
                                "Output file: " + outputPath);
     } else {
         outputLog->append("Error: Failed to bundle code.");
-        outputLog->append("Could not create or write to output file: " + outputPath);
+        outputLog->append("Could not read the source file or write the output file: " + outputPath);
         QMessageBox::warning(this, "Bundle Code", 
                            "Failed to bundle code.\n"
                            "Check the output log for details.");

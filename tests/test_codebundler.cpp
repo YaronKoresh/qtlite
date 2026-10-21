@@ -15,6 +15,7 @@ private slots:
     void testBundleWithCircularIncludes();
     void testBundleSameHeaderViaDotDotPathIsIncludedOnce();
     void testBundleIndentedSystemIncludeIsNotRepeated();
+    void testBundleMissingRootFileFailsAndKeepsPreviousBundle();
 };
 
 void TestCodeBundler::testBundleSimpleFile()
@@ -252,6 +253,23 @@ void TestCodeBundler::testBundleIndentedSystemIncludeIsNotRepeated()
 
     const QString content = bundleToString(dir + "/main.cpp");
     QCOMPARE(content.count("#include <vector>"), 1);
+}
+
+void TestCodeBundler::testBundleMissingRootFileFailsAndKeepsPreviousBundle()
+{
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+    const QString dir = tempDir.path();
+
+    writeFile(dir + "/main_bundled.cpp", "previous good bundle\n");
+
+    CodeBundler bundler;
+    QString outputPath;
+    QVERIFY(!bundler.bundleCode(dir + "/main.cpp", outputPath));
+
+    QFile f(dir + "/main_bundled.cpp");
+    QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
+    QCOMPARE(QString::fromUtf8(f.readAll()), QString("previous good bundle\n"));
 }
 
 QTEST_MAIN(TestCodeBundler)

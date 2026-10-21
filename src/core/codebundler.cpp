@@ -13,8 +13,14 @@ bool CodeBundler::bundleCode(const QString& rootFilePath, QString& outputPath) {
 
     outputPath = rootDir + "/" + rootName + "_bundled." + rootSuffix;
 
-    QFile outFile(outputPath);
-    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+    QFile rootFile(rootFileInfo.absoluteFilePath());
+    if (!rootFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return false;
+    }
+    rootFile.close();
+
+    QSaveFile outFile(outputPath);
+    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         return false;
     }
 
@@ -25,9 +31,8 @@ bool CodeBundler::bundleCode(const QString& rootFilePath, QString& outputPath) {
     parseAndBundleFile(rootFileInfo.absoluteFilePath(), outStream, processedIncludes, rootDir);
 
     outStream.flush();
-    outFile.close();
 
-    return true;
+    return outFile.commit();
 }
 
 void CodeBundler::parseAndBundleFile(const QString& filePath, QTextStream& outStream,
