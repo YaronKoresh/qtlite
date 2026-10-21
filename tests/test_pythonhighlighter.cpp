@@ -1,6 +1,7 @@
 #include <QtTest>
 #include <QTextDocument>
 #include <QTextBlock>
+#include <QTextLayout>
 #include "../src/highlighting/pythonhighlighter.h"
 
 class TestPythonHighlighter : public QObject
@@ -13,6 +14,7 @@ private slots:
     void testOneLineTripleQuotedStringDoesNotContinue();
     void testMixedDelimitersDoNotCloseEachOther();
     void testStringStaysOpenUntilItsClosingDelimiter();
+    void testStringsWithEscapedQuotesAreColoredAsOneString();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -73,6 +75,28 @@ void TestPythonHighlighter::testStringStaysOpenUntilItsClosingDelimiter()
     QCOMPARE(states.at(1), 1);
     QCOMPARE(states.at(2), 0);
     QCOMPARE(states.at(3), 0);
+}
+
+static int stringColoredLength(const QString& code)
+{
+    QTextDocument doc;
+    doc.setPlainText(code);
+    PythonHighlighter highlighter(&doc);
+    highlighter.rehighlight();
+
+    const QColor stringColor(163, 21, 21);
+    int covered = 0;
+    for (const QTextLayout::FormatRange& range : doc.firstBlock().layout()->formats()) {
+        if (range.format.foreground().color() == stringColor)
+            covered += range.length;
+    }
+    return covered;
+}
+
+void TestPythonHighlighter::testStringsWithEscapedQuotesAreColoredAsOneString()
+{
+    QCOMPARE(stringColoredLength("x = \"a\\\"b\" + y"), 6);
+    QCOMPARE(stringColoredLength("x = 'it\\'s' + y"), 7);
 }
 
 QTEST_MAIN(TestPythonHighlighter)

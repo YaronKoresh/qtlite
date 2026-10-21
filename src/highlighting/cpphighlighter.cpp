@@ -66,7 +66,7 @@ void CppHighlighter::initializeComments() {
 
 void CppHighlighter::initializeStrings() {
     setQuotationFormat(QColor(163, 21, 21));
-    addHighlightingRule("\"[^\"]*\"", quotationFormat);
+    addHighlightingRule("\"(?:[^\"\\\\\n]|\\\\.)*\"", quotationFormat);
 }
 
 void CppHighlighter::highlightMultilineComments(const QString& text) {

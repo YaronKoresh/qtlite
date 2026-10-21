@@ -95,9 +95,11 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
 - **test_pythonhighlighter.cpp** - Tests for PythonHighlighter multi-line string state
   - Docstrings close on the line of their closing delimiter
   - Mixed delimiters do not close each other
+  - Strings with escaped quotes are colored as one string
 
 - **test_cpphighlighter.cpp** - Tests for CppHighlighter block comment state
   - A comment start inside a line comment or string does not open a block
+  - Strings with escaped quotes are colored as one string
 
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting
   - A second run while a process is running is rejected

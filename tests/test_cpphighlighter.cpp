@@ -1,6 +1,7 @@
 #include <QtTest>
 #include <QTextDocument>
 #include <QTextBlock>
+#include <QTextLayout>
 #include "../src/highlighting/cpphighlighter.h"
 
 class TestCppHighlighter : public QObject
@@ -14,6 +15,7 @@ private slots:
     void testCommentStartAfterCharLiteralQuoteStillOpensBlock();
     void testBlockCommentOnOneLineDoesNotContinue();
     void testSlashStarSlashDoesNotCloseItself();
+    void testStringWithEscapedQuoteIsColoredAsOneString();
 };
 
 static QList<int> blockStates(const QString& code)
@@ -81,6 +83,29 @@ void TestCppHighlighter::testSlashStarSlashDoesNotCloseItself()
     QCOMPARE(states.at(0), 1);
     QCOMPARE(states.at(1), 0);
     QCOMPARE(states.at(2), 0);
+}
+
+static QList<QTextLayout::FormatRange> formatsOfFirstLine(const QString& code)
+{
+    QTextDocument doc;
+    doc.setPlainText(code);
+    CppHighlighter highlighter(&doc);
+    highlighter.rehighlight();
+    return doc.firstBlock().layout()->formats();
+}
+
+void TestCppHighlighter::testStringWithEscapedQuoteIsColoredAsOneString()
+{
+    const QString code = "x = \"a\\\"b\" + y;";
+    const QColor stringColor(163, 21, 21);
+
+    int covered = 0;
+    for (const QTextLayout::FormatRange& range : formatsOfFirstLine(code)) {
+        if (range.format.foreground().color() == stringColor)
+            covered += range.length;
+    }
+
+    QCOMPARE(covered, 6);
 }
 
 QTEST_MAIN(TestCppHighlighter)

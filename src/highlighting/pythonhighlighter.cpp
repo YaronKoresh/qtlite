@@ -49,8 +49,8 @@ void PythonHighlighter::initializeComments() {
 
 void PythonHighlighter::initializeStrings() {
     setQuotationFormat(QColor(163, 21, 21));
-    addHighlightingRule("\"[^\"]*\"", quotationFormat);
-    addHighlightingRule("'[^']*'", quotationFormat);
+    addHighlightingRule("\"(?:[^\"\\\\\n]|\\\\.)*\"", quotationFormat);
+    addHighlightingRule("'(?:[^'\\\\\n]|\\\\.)*'", quotationFormat);
 }
 
 void PythonHighlighter::initializeMultilineStrings() {
