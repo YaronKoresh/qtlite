@@ -11,32 +11,44 @@ void CompilationEngine::setProjectSettings(const ProjectSettings& settings) {
     projectSettings = settings;
 }
 
+bool CompilationEngine::rejectIfBusy() {
+    if (!currentProcess) return false;
+    outputLog->append("!!! A build or run is already in progress. Wait for it to finish.");
+    return true;
+}
+
 void CompilationEngine::compilePython(const QString& filePath) {
+    if (rejectIfBusy()) return;
     outputLog->append("Running Python script...");
 
-    currentProcess = new QProcess(this);
-    currentProcess->setWorkingDirectory(projectSettings.buildDir);
+    QProcess* process = new QProcess(this);
+    currentProcess = process;
+    process->setWorkingDirectory(projectSettings.buildDir);
 
-    connect(currentProcess, &QProcess::readyReadStandardOutput, [this]() {
-        outputLog->append(currentProcess->readAllStandardOutput());
+    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
+        outputLog->append(process->readAllStandardOutput());
     });
-    connect(currentProcess, &QProcess::readyReadStandardError, [this]() {
-        outputLog->append(currentProcess->readAllStandardError());
+    connect(process, &QProcess::readyReadStandardError, [this, process]() {
+        outputLog->append(process->readAllStandardError());
     });
-    connect(currentProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [this]() {
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            [this, process]() {
                 outputLog->append("\n...Script finished.");
-                currentProcess->deleteLater();
-                currentProcess = nullptr;
+                process->deleteLater();
+                if (currentProcess == process) currentProcess = nullptr;
             });
 
-    currentProcess->start(compilerPaths.pythonExePath, {filePath});
-    if (!currentProcess->waitForStarted()) {
+    process->start(compilerPaths.pythonExePath, {filePath});
+    if (!process->waitForStarted()) {
         outputLog->append("!!! FAILED to start process: " + compilerPaths.pythonExePath);
+        process->disconnect(this);
+        process->deleteLater();
+        currentProcess = nullptr;
     }
 }
 
 void CompilationEngine::compileConsole(const QString& filePath) {
+    if (rejectIfBusy()) return;
     outputLog->append("Starting C/C++ Console build process...");
 
     QString buildConfig = projectSettings.buildConfig.toLower();
@@ -91,6 +103,7 @@ void CompilationEngine::compileConsole(const QString& filePath) {
 }
 
 void CompilationEngine::compileQt(const QString& filePath) {
+    if (rejectIfBusy()) return;
     outputLog->append("Starting Qt Widgets build process...");
 
     QFile codeFile(filePath);
@@ -231,21 +244,29 @@ void CompilationEngine::executeProcess(const QString& command, const QString& ex
     outputLog->append("Running build...\nThis may take a moment...\n");
     qDebug() << "Executing:" << "powershell.exe -Command " << command;
 
-    currentProcess = new QProcess(this);
+    QProcess* process = new QProcess(this);
+    currentProcess = process;
 
-    connect(currentProcess, &QProcess::readyReadStandardOutput, [this]() {
-        outputLog->append(currentProcess->readAllStandardOutput());
+    connect(process, &QProcess::readyReadStandardOutput, [this, process]() {
+        outputLog->append(process->readAllStandardOutput());
     });
-    connect(currentProcess, &QProcess::readyReadStandardError, [this]() {
-        outputLog->append(currentProcess->readAllStandardError());
+    connect(process, &QProcess::readyReadStandardError, [this, process]() {
+        outputLog->append(process->readAllStandardError());
     });
 
-    connect(currentProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             [this, exeToRun](int exitCode, QProcess::ExitStatus exitStatus) {
                 handleBuildCompletion(exitCode, exitStatus, exeToRun);
             });
+    connect(process, &QProcess::errorOccurred, [this, process](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart) return;
+        outputLog->append("!!! FAILED to start process: powershell.exe");
+        process->disconnect(this);
+        process->deleteLater();
+        if (currentProcess == process) currentProcess = nullptr;
+    });
 
-    currentProcess->start("powershell.exe", {"-Command", command});
+    process->start("powershell.exe", {"-Command", command});
 }
 
 void CompilationEngine::handleBuildCompletion(int exitCode, QProcess::ExitStatus exitStatus, const QString& exeToRun) {

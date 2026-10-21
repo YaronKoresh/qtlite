@@ -87,6 +87,8 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
   - Failure on unwritable targets
 
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting
+  - A second run while a process is running is rejected
+  - A process that fails to start is reported and frees the engine
   - Missing source file
   - Empty source file
   - Qt module detection for the generated .pro file

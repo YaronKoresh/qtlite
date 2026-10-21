@@ -29,8 +29,10 @@ public:
     void compilePython(const QString& filePath);
     void compileConsole(const QString& filePath);
     void compileQt(const QString& filePath);
+    bool isBusy() const { return currentProcess != nullptr; }
 
 private:
+    bool rejectIfBusy();
     QString generateProFile(const QString& code);
     void executeProcess(const QString& command, const QString& exeToRun);
     void handleBuildCompletion(int exitCode, QProcess::ExitStatus exitStatus, const QString& exeToRun);
