@@ -150,19 +150,51 @@ QString CompilationEngine::generateProFile(const QString& code) {
     QSet<QString> modules;
     modules << "widgets";
 
-    QRegularExpression re("#include\\s*<([a-zA-Z0-9_]+)/");
+    static const QSet<QString> nonModuleHeaders = {
+        "global", "math", "endian", "algorithms", "debug", "alloc"
+    };
+    static const QList<QPair<QString, QString>> classPrefixes = {
+        {"qwebengine", "webenginewidgets"}, {"qnetwork", "network"}, {"qtcp", "network"},
+        {"qudp", "network"}, {"qhttp", "network"}, {"qssl", "network"}, {"qlocalsocket", "network"},
+        {"qlocalserver", "network"}, {"qabstractsocket", "network"}, {"qsql", "sql"},
+        {"qmedia", "multimedia"}, {"qaudio", "multimedia"}, {"qvideo", "multimedia"},
+        {"qcamera", "multimedia"}, {"qsoundeffect", "multimedia"}, {"qsvg", "svg"},
+        {"qprint", "printsupport"}, {"qpagesetup", "printsupport"}, {"qxml", "xml"},
+        {"qtest", "testlib"}, {"qsignalspy", "testlib"}, {"qopengl", "opengl"},
+        {"qquick", "quick"}, {"qqml", "qml"}, {"qbluetooth", "bluetooth"},
+        {"qserialport", "serialport"}, {"qwebsocket", "websockets"}, {"qdbus", "dbus"}
+    };
+
+    QRegularExpression re("#include\\s*<([a-zA-Z0-9_]+)(/?)");
     auto it = re.globalMatch(code);
 
     while (it.hasNext()) {
-        QString moduleName = it.next().captured(1).toLower();
-        if (moduleName.startsWith("qt")) {
-            moduleName.remove(0, 2);
-            if (!moduleName.isEmpty()) modules << moduleName;
+        QRegularExpressionMatch match = it.next();
+        const QString original = match.captured(1);
+        const QString header = original.toLower();
+        const bool hasSlash = !match.captured(2).isEmpty();
+        const bool umbrellaName = original.size() > 2 && original.startsWith("Qt") && original[2].isUpper();
+
+        if ((hasSlash && header.startsWith("qt")) || (!hasSlash && umbrellaName)) {
+            QString moduleName = header.mid(2);
+            if (moduleName == "test") moduleName = "testlib";
+            if (!moduleName.isEmpty() && (hasSlash || !nonModuleHeaders.contains(moduleName))) {
+                modules << moduleName;
+            }
+        } else if (!hasSlash) {
+            for (const auto& entry : classPrefixes) {
+                if (header.startsWith(entry.first)) {
+                    modules << entry.second;
+                    break;
+                }
+            }
         }
     }
 
     QString proContent = "TEMPLATE = app\nTARGET = temp_app\nSOURCES += main.cpp\n";
-    proContent += "QT += " + QStringList(modules.values()).join(" ") + "\n";
+    QStringList moduleList = modules.values();
+    moduleList.sort();
+    proContent += "QT += " + moduleList.join(" ") + "\n";
 
     QString buildConfig = projectSettings.buildConfig.toLower();
     proContent += "CONFIG += " + buildConfig + "\n";

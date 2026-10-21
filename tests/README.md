@@ -88,6 +88,7 @@ for %%t in (test_pathvalidator test_settingspersistence test_snippetmanager test
 - **test_compilationengine.cpp** - Tests for CompilationEngine error reporting
   - Missing source file
   - Empty source file
+  - Qt module detection for the generated .pro file
 
 ## Adding New Tests
 
